@@ -1,0 +1,4 @@
+.idea/
+
+config/db.yaml
+config/oss.yaml
