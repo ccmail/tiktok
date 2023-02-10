@@ -20,15 +20,15 @@ func InitRouter() *gin.Engine {
 		}
 
 		// publish路由组
-		// publishGroup := g.Group("/publish")
-		// {
-		// 	publishGroup.POST("/action/", middleware.JwtMiddleware(), Publish)
-		// 	publishGroup.GET("/list/", middleware.JwtMiddleware(), controller.PublishList)
+		publishGroup := g.Group("/publish")
+		{
+			publishGroup.POST("/action/", middleware.JwtMiddleware(), Publish)
+			publishGroup.GET("/list/", middleware.JwtMiddleware(), PublishList)
 
-		// }
+		}
 
-		// // feed
-		// g.GET("/feed/", controller.Feed)
+		// feed
+		g.GET("/feed/", Feed)
 
 		// favoriteGroup := g.Group("favorite")
 		// {

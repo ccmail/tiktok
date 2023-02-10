@@ -6,10 +6,10 @@ import (
 
 type Video struct {
 	gorm.Model
-	AuthorID      uint64 `gorm:"not null;"`
-	PlayURL       string `gorm:"not null;"`
+	AuthorID      uint   `gorm:"not null;"`
+	PlayUrl       string `gorm:"not null;"`
 	CoverUrl      string `gorm:"not null;"`
 	Title         string `gorm:"not null;"`
-	FavoriteCount string
-	CommentCount  string
+	FavoriteCount uint
+	CommentCount  uint
 }

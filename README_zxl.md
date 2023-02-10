@@ -2,13 +2,12 @@
 
 ## 1 基础接口
 
-- [ ] 视频流接口：GET /douyin/feed/
-
+- [x] 视频流接口：GET /douyin/feed/
 - [x] 用户注册：POST /douyin/user/register/
 - [x] 用户登录：POST /douyin/user/login/
 - [x] 用户信息：GET /douyin/user/
-- [ ] 投稿接口 POST /douyin/publish/action/
-- [ ] 发布列表 GET /douyin/publish/list/
+- [x] 投稿接口 POST /douyin/publish/action/
+- [x] 发布列表 GET /douyin/publish/list/
 
 ## 2 互动接口
 
@@ -27,7 +26,7 @@
 - [ ] 聊天记录：GET /douyin/message/chat/
 
 # zxl, 2023.2.9
-
+实现了用户注册、用户登录、用户查询接口
 
 ## DAO 部分的改动
 参见 ReadMeModel.md
@@ -37,3 +36,6 @@
 - 新增 config 目录，包含 db.yaml 和 oss.yaml 分别作为数据库和OSS的配置文件。为防隐私泄露，这两个文件加入了.gitignore中。
 - 新增 pkg/errno 目录，用于定义错误类型
 - 新增 pkg/mw 目录，用于存放中间件（例如 jwt 鉴权）
+
+# zxl, 2023.2.10
+实现了投稿、发布列表、视频流接口

@@ -47,36 +47,40 @@ func CheckToken(token string) (*MyClaims, bool) {
 	}
 }
 
-// JwtMiddleware jwt中间件
+// JwtMiddleware jwt 中间件
 func JwtMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenStr := c.Query("token")
 		if tokenStr == "" {
 			tokenStr = c.PostForm("token")
 		}
-		//用户不存在
+		// 用户不存在
 		if tokenStr == "" {
-			c.JSON(http.StatusOK, common.BaseResponse{StatusCode: 401, StatusMsg: "用户不存在"})
-			c.Abort() //阻止执行
+			c.JSON(http.StatusOK, common.BaseResponse{
+				StatusCode: 401,
+				StatusMsg:  "Target user not found",
+			},
+			)
+			c.Abort() // 阻止执行
 			return
 		}
-		//验证token
+		// 验证 token
 		tokenStruck, ok := CheckToken(tokenStr)
 		if !ok {
 			c.JSON(http.StatusOK, common.BaseResponse{
 				StatusCode: 403,
-				StatusMsg:  "token不正确",
+				StatusMsg:  "Wrong token",
 			})
-			c.Abort() //阻止执行
+			c.Abort() // 阻止执行
 			return
 		}
-		//token超时
+		// token 超时
 		if time.Now().Unix() > tokenStruck.ExpiresAt {
 			c.JSON(http.StatusOK, common.BaseResponse{
 				StatusCode: 402,
-				StatusMsg:  "token过期",
+				StatusMsg:  "Expired token",
 			})
-			c.Abort() //阻止执行
+			c.Abort() // 阻止执行
 			return
 		}
 		c.Set("username", tokenStruck.UserName)

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserRegister 用户注册控制
+// UserRegister 用户注册控制层
 func UserRegister(c *gin.Context) {
 	//1.参数提取
 	username, password := c.Query("username"), c.Query("password")
@@ -31,12 +31,12 @@ func UserRegister(c *gin.Context) {
 	c.JSON(http.StatusOK, common.UserRegisterResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "注册成功"},
+			StatusMsg:  "Register: success"},
 		UserIdTokenResponse: registerResponse,
 	})
 }
 
-// UserLogin 用户登录主函数
+// UserLogin 用户登录控制层
 func UserLogin(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
@@ -59,12 +59,12 @@ func UserLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, common.UserLoginResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "登录成功"},
+			StatusMsg:  "Login: success"},
 		UserIdTokenResponse: userLoginResponse,
 	})
 }
 
-// UserInfo 用户信息主函数
+// UserInfo 用户信息控制层
 func UserInfo(c *gin.Context) {
 	// 根据user_id查询
 	rawId := c.Query("user_id")
@@ -92,7 +92,7 @@ func UserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, common.UserInfoResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "查询成功",
+			StatusMsg:  "Get user info: success",
 		},
 		UserList: userInfoResponse,
 	})
