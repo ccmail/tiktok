@@ -18,7 +18,7 @@ import (
 
 // }
 
-// OssUpload 上传至云端Oss，返回url
+// OssUploadFromPath  上传至云端Oss，返回url
 func OssUploadFromPath(filename string, filepath string) (url string, err error) {
 	err = mapper.Bucket.PutObjectFromFile("short_video/"+filename, filepath)
 	if err != nil {
@@ -43,17 +43,17 @@ func CreateVideo(video *model.Video) {
 }
 
 // ExampleReadFrameAsJpeg 获取封面
-func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
+func ExampleReadFrameAsJpeg(inFileName string, frameNum int) (io.Reader, error) {
 	buf := bytes.NewBuffer(nil)
 	err := ffmpeg.Input(inFileName).
 		Filter("select", ffmpeg.Args{fmt.Sprintf("gte(n,%d)", frameNum)}).
 		Output("pipe:", ffmpeg.KwArgs{"vframes": 1, "format": "image2", "vcodec": "mjpeg"}).
 		WithOutput(buf, os.Stdout).
 		Run()
-	if err != nil {
-		panic(err)
-	}
-	return buf
+	//if err != nil {
+	//	return buf
+	//}
+	return buf, err
 }
 
 // IsFavorite 查询某用户是否点赞某视频

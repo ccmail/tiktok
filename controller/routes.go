@@ -1,7 +1,7 @@
 package controller
 
 import (
-	middleware "tiktok/pkg/mw"
+	middleware "tiktok/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,7 +9,7 @@ import (
 func InitRouter() *gin.Engine {
 	r := gin.Default()
 	// 主路由组
-	g := r.Group("/")
+	g := r.Group("/douyin")
 	{
 		// user路由组
 		userGroup := g.Group("/user")

@@ -3,6 +3,7 @@ package main
 import (
 	"tiktok/controller"
 	"tiktok/mapper"
+	"tiktok/pkg/middleware"
 )
 
 func main() {
@@ -11,13 +12,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
+	middleware.InitLog()
 	// 连接OSS服务
 	err = mapper.InitOSS()
 	if err != nil {
 		panic(err)
 	}
-
 	//注册路由
 	r := controller.InitRouter()
 	//启动端口为12345的项目

@@ -42,6 +42,7 @@ func InitOSS() error {
 		log.Fatal(err)
 	}
 	yamlFile, err := os.ReadFile("./config/oss.yaml")
+	//yamlFile, err := os.ReadFile("E:\\OneDrive\\MyCode\\Go\\TikTok\\config\\oss.yaml")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

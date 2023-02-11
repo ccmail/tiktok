@@ -1,26 +1,30 @@
-package mw
+package middleware
 
 import (
-	"net/http"
-	"tiktok/pkg/common"
-	"time"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"log"
+	"net/http"
+	"tiktok/config"
+	"tiktok/pkg/common"
+	"time"
 )
 
-var Key = []byte("byte dance 11111 return")
+//var Key = []byte("byte dance 11111 return")
 
+// MyClaims
+// jwt生成/解析token的格式, 用来传递/接受token中的信息
 type MyClaims struct {
 	UserId   uint   `json:"user_id"`
 	UserName string `json:"username"`
 	jwt.StandardClaims
 }
 
-// CreateToken 生成token
+// CreateToken
+// 生成token
 func CreateToken(userId uint, userName string) (string, error) {
-	expireTime := time.Now().Add(24 * time.Hour) //过期时间
-	nowTime := time.Now()                        //当前时间
+	expireTime := time.Now().Add(time.Duration(config.TokenLiveTime) * time.Hour) //过期时间
+	nowTime := time.Now()                                                         //当前时间
 	claims := MyClaims{
 		UserId:   userId,
 		UserName: userName,
@@ -31,15 +35,21 @@ func CreateToken(userId uint, userName string) (string, error) {
 			Subject:   "userToken",       //签名主题
 		},
 	}
+	//更改了加密方式, 更改为非对称加密RS256
 	tokenStruct := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return tokenStruct.SignedString(Key)
+	// 使用密钥加密token, 传入要求[]byte切片, 记得类型转换
+	return tokenStruct.SignedString([]byte(config.Key))
 }
 
-// CheckToken 验证token
-func CheckToken(token string) (*MyClaims, bool) {
-	tokenObj, _ := jwt.ParseWithClaims(token, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return Key, nil
+// ParseToken 解析Token, 这里可能需要把名字更改为ParseToken
+func ParseToken(token string) (*MyClaims, bool) {
+	tokenObj, err := jwt.ParseWithClaims(token, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Key), nil
 	})
+	if err != nil {
+		log.Println("token无效, 请检查token", err)
+		return nil, false
+	}
 	if key, _ := tokenObj.Claims.(*MyClaims); tokenObj.Valid {
 		return key, true
 	} else {
@@ -65,7 +75,7 @@ func JwtMiddleware() gin.HandlerFunc {
 			return
 		}
 		// 验证 token
-		tokenStruck, ok := CheckToken(tokenStr)
+		tokenStruck, ok := ParseToken(tokenStr)
 		if !ok {
 			c.JSON(http.StatusOK, common.BaseResponse{
 				StatusCode: 403,

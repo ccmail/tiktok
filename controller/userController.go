@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"tiktok/pkg/common"
-	middleware "tiktok/pkg/mw"
+	middleware "tiktok/pkg/middleware"
 	"tiktok/service"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,7 @@ func UserLogin(c *gin.Context) {
 
 	// 用户不存在返回对应的错误
 	if err != nil {
+		log.Println("用户不存在", err)
 		c.JSON(http.StatusOK, common.UserLoginResponse{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
@@ -62,6 +64,7 @@ func UserLogin(c *gin.Context) {
 			StatusMsg:  "Login: success"},
 		UserIdTokenResponse: userLoginResponse,
 	})
+	log.Println(userLoginResponse)
 }
 
 // UserInfo 用户信息控制层
@@ -72,7 +75,7 @@ func UserInfo(c *gin.Context) {
 
 	// 根据token获得当前用户的userid
 	token := c.Query("token")
-	tokenStruct, _ := middleware.CheckToken(token)
+	tokenStruct, _ := middleware.ParseToken(token)
 	hostId := tokenStruct.UserId
 	userInfoResponse.IsFollow = service.IsFollow(rawId, hostId)
 
@@ -96,5 +99,4 @@ func UserInfo(c *gin.Context) {
 		},
 		UserList: userInfoResponse,
 	})
-
 }

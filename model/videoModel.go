@@ -10,6 +10,6 @@ type Video struct {
 	PlayUrl       string `gorm:"not null;"`
 	CoverUrl      string `gorm:"not null;"`
 	Title         string `gorm:"not null;"`
-	FavoriteCount uint
-	CommentCount  uint
+	FavoriteCount uint   `gorm:"default:0"`
+	CommentCount  uint   `gorm:"default:0"`
 }

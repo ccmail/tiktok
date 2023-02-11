@@ -2,6 +2,9 @@ package controller
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	logging "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,16 +12,12 @@ import (
 	"strings"
 	"tiktok/model"
 	"tiktok/pkg/common"
-	middleware "tiktok/pkg/mw"
+	middleware "tiktok/pkg/middleware"
 	"tiktok/service"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	logging "github.com/sirupsen/logrus"
-	"gorm.io/gorm"
 )
 
-// 投稿控制层
+// Publish 投稿控制层
 func Publish(c *gin.Context) {
 	// 中间件验证token后，获取userId
 	rawUserId, _ := c.Get("user_id")
@@ -41,6 +40,7 @@ func Publish(c *gin.Context) {
 	filename := filepath.Base(data.Filename)
 	finalName := fmt.Sprintf("%d_%s", userId, filename)
 
+	//从这里开始重写
 	// 先存储到本地文件夹，再保存到云端，获取封面后删除本地文件
 	savePath := filepath.Join("./videos/", finalName)
 	err = c.SaveUploadedFile(data, savePath)
@@ -64,7 +64,7 @@ func Publish(c *gin.Context) {
 
 	// 直接传至云端，不用存储到本地
 	coverName := strings.Replace(finalName, ".mp4", ".jpeg", 1)
-	img := service.ExampleReadFrameAsJpeg(savePath, 1) // 获取第1帧作为封面
+	img, _ := service.ExampleReadFrameAsJpeg(savePath, 1) // 获取第1帧作为封面
 
 	coverUrl, err := service.OssUploadFromReader(coverName, img)
 	if err != nil {
@@ -210,7 +210,7 @@ func Feed(c *gin.Context) {
 			feedUser.IsFollow = false
 			if haveToken {
 				// 查询是否关注
-				tokenStruct, ok := middleware.CheckToken(strToken)
+				tokenStruct, ok := middleware.ParseToken(strToken)
 
 				// token 超时
 				if time.Now().Unix() > tokenStruct.ExpiresAt {

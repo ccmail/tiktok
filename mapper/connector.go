@@ -29,6 +29,7 @@ type DBconfig struct {
 // 从数据库配置文件中获取DSN
 func getDSN() string {
 	yamlFile, err := os.ReadFile("./config/db.yaml")
+	//yamlFile, err := os.ReadFile("E:\\OneDrive\\MyCode\\Go\\TikTok\\config\\db.yaml")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

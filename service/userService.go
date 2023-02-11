@@ -2,11 +2,12 @@ package service
 
 import (
 	"errors"
+	"log"
 	"strconv"
 	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
-	middleware "tiktok/pkg/mw"
+	"tiktok/pkg/middleware"
 
 	"tiktok/model"
 
@@ -85,6 +86,7 @@ func UserLoginService(username string, password string) (common.UserIdTokenRespo
 	// 合法性检验
 	err := isLegal(username, password)
 	if err != nil {
+		log.Println("用户名密码非法", err)
 		return userResponse, err
 	}
 
@@ -93,21 +95,25 @@ func UserLoginService(username string, password string) (common.UserIdTokenRespo
 
 	err = mapper.DBConn.Where("name=?", username).First(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("用户不存在", err)
 		return userResponse, errno.ErrorFullPossibility
 	}
 
 	// 检查密码是否正确
 	if !checkPassword(user.Password, password) {
+		log.Println("密码错误")
 		return userResponse, errno.ErrorWrongPassword
 	}
 
 	if user.Model.ID == 0 {
+		log.Println("账号或密码出错")
 		return userResponse, errno.ErrorFullPossibility
 	}
 
 	// 颁发token
 	token, err := middleware.CreateToken(user.Model.ID, user.Name)
 	if err != nil {
+		log.Println("颁发token失败", err)
 		return userResponse, err
 	}
 
