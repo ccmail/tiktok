@@ -55,7 +55,8 @@ type ReturnMyself struct {
 }
 
 type ReturnVideo struct {
-	VideoId       uint         `json:"video_id"`
+	VideoId uint `json:"id"`
+	//根据https://www.apifox.cn/apidoc/shared-09d88f32-0b6c-4157-9d07-a36d32d7a75c/api-50707525中的接口信息,对id映射的json进行了更改, 由video_id->id
 	Author        ReturnAuthor `json:"author"`
 	PlayUrl       string       `json:"play_url"`
 	CoverUrl      string       `json:"cover_url"`

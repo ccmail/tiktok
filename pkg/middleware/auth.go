@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -41,7 +42,9 @@ func CreateToken(userId uint, userName string) (string, error) {
 	return tokenStruct.SignedString([]byte(config.Key))
 }
 
-// ParseToken 解析Token, 这里可能需要把名字更改为ParseToken
+// ParseToken
+// 解析Token, 这里可能需要把名字更改为ParseToken
+// 返回值为颁发的token中所携带的信息,以及是否查到token
 func ParseToken(token string) (*MyClaims, bool) {
 	tokenObj, err := jwt.ParseWithClaims(token, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.Key), nil
@@ -54,6 +57,24 @@ func ParseToken(token string) (*MyClaims, bool) {
 		return key, true
 	} else {
 		return nil, false
+	}
+}
+
+// ParseTokenCJS
+// 解析Token, 这里可能需要把名字更改为ParseToken
+// 返回值为颁发的token中所携带的信息,以及是否查到token
+func ParseTokenCJS(token string) (*MyClaims, error) {
+	tokenObj, err := jwt.ParseWithClaims(token, &MyClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(config.Key), nil
+	})
+	if err != nil {
+		log.Panicln("token无效, 请检查token", err)
+		return nil, err
+	}
+	if key, _ := tokenObj.Claims.(*MyClaims); tokenObj.Valid {
+		return key, nil
+	} else {
+		return nil, errors.New("token解析失败")
 	}
 }
 
