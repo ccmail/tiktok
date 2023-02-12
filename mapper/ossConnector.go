@@ -41,7 +41,8 @@ func InitOSS() error {
 	if err != nil && !os.IsExist(err) {
 		log.Fatal(err)
 	}
-	yamlFile, err := os.ReadFile("./config/oss.yaml")
+	// yamlFile, err := os.ReadFile("./config/oss.yaml")
+	yamlFile, err := os.ReadFile("D:\\Documents\\Golang Projects\\tiktok_ours\\config\\oss.yaml")
 	if err != nil {
 		fmt.Println(err.Error())
 	}

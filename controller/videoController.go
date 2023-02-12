@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/common"
-	middleware "tiktok/pkg/mw"
+	"tiktok/pkg/middleware"
 	"tiktok/service"
 	"time"
 
@@ -83,13 +84,13 @@ func Publish(c *gin.Context) {
 
 	// 保存发布信息至数据库,刚开始发布，喜爱和评论默认为0
 	video := model.Video{
-		Model:         gorm.Model{},
-		AuthorID:      userId,
-		PlayUrl:       playUrl,
-		CoverUrl:      coverUrl,
-		FavoriteCount: 0,
-		CommentCount:  0,
-		Title:         title,
+		Model:        gorm.Model{},
+		AuthorID:     userId,
+		PlayUrl:      playUrl,
+		CoverUrl:     coverUrl,
+		LikeCount:    0,
+		CommentCount: 0,
+		Title:        title,
 	}
 	service.CreateVideo(&video)
 
@@ -99,6 +100,7 @@ func Publish(c *gin.Context) {
 	})
 }
 
+// 发布列表控制层
 func PublishList(c *gin.Context) {
 	// 中间件鉴权 token 后，获取 hostID （即发起请求的用户 id ）
 	getHostId, _ := c.Get("user_id")
@@ -115,7 +117,7 @@ func PublishList(c *gin.Context) {
 	// fmt.Println("guestID: ", GuestId)
 
 	// 根据传入 id 查找用户
-	getUser, err := service.GetUser(GuestId)
+	getUser, err := mapper.FindUserInfo(GuestId)
 	if err != nil {
 		c.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
@@ -130,7 +132,7 @@ func PublishList(c *gin.Context) {
 		Name:          getUser.Name,
 		FollowCount:   getUser.FollowCount,
 		FollowerCount: getUser.FollowerCount,
-		IsFollow:      service.IsFollowing(HostId, GuestId),
+		IsFollow:      mapper.CheckFollowing(HostId, GuestId),
 	}
 
 	// 根据用户id查找 所有相关视频信息
@@ -154,9 +156,9 @@ func PublishList(c *gin.Context) {
 			Author:        returnAuthor,
 			PlayUrl:       videoList[i].PlayUrl,
 			CoverUrl:      videoList[i].CoverUrl,
-			FavoriteCount: videoList[i].FavoriteCount,
+			FavoriteCount: videoList[i].LikeCount,
 			CommentCount:  videoList[i].CommentCount,
-			IsFavorite:    service.IsFavorite(HostId, videoList[i].ID),
+			IsFavorite:    mapper.IsFavorite(HostId, videoList[i].ID),
 			Title:         videoList[i].Title,
 		}
 		returnVideoList = append(returnVideoList, returnVideo)
@@ -196,8 +198,8 @@ func Feed(c *gin.Context) {
 		var tmp common.FeedVideo
 		tmp.Id = v.ID
 		tmp.PlayUrl = v.PlayUrl
-		//tmp.Author = //依靠用户信息接口查询
-		user, err := service.GetUser(v.AuthorID)
+
+		user, err := mapper.FindUserInfo(v.AuthorID)
 		var feedUser common.FeedUser
 		if err == nil { // 用户存在
 			feedUser.Id = user.ID
@@ -224,12 +226,12 @@ func Feed(c *gin.Context) {
 				if ok {
 					uid1 := tokenStruct.UserId // 用户id
 					uid2 := v.AuthorID         // 视频发布者id
-					if service.IsFollowing(uid1, uid2) {
+					if mapper.CheckFollowing(uid1, uid2) {
 						feedUser.IsFollow = true
 					}
 
-					vid := v.ID                        // 视频id
-					if service.IsFavorite(uid1, vid) { //有点赞记录
+					vid := v.ID                       // 视频id
+					if mapper.IsFavorite(uid1, vid) { //有点赞记录
 						tmp.IsFavorite = true
 					}
 				}
@@ -238,7 +240,7 @@ func Feed(c *gin.Context) {
 		tmp.Author = feedUser
 		tmp.CommentCount = v.CommentCount
 		tmp.CoverUrl = v.CoverUrl
-		tmp.FavoriteCount = v.FavoriteCount
+		tmp.FavoriteCount = v.LikeCount
 		tmp.IsFavorite = false
 		tmp.Title = v.Title
 		feedVideoList = append(feedVideoList, tmp)

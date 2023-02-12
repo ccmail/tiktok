@@ -2,7 +2,6 @@ package service
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -54,19 +53,6 @@ func ExampleReadFrameAsJpeg(inFileName string, frameNum int) io.Reader {
 		panic(err)
 	}
 	return buf
-}
-
-// IsFavorite 查询某用户是否点赞某视频
-func IsFavorite(uid uint, vid uint) bool {
-	var total int64
-	err := mapper.DBConn.Table("likes").Where("user_id = ? AND video_id = ? AND is_like = ?", uid, vid, true).Count(&total).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false
-	}
-	if total == 0 {
-		return false
-	}
-	return true
 }
 
 const maxVideoNum = 30 // feed每次返回的最大视频数量

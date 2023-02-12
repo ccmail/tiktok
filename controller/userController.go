@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"tiktok/pkg/common"
-	middleware "tiktok/pkg/mw"
+	"tiktok/pkg/middleware"
+
 	"tiktok/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +21,7 @@ func UserRegister(c *gin.Context) {
 
 	//3.返回响应
 	if err != nil {
+		log.Println("controller-UserRegister: 注册失败: 用户名: ", username, ", 密码: ", password)
 		c.JSON(http.StatusOK, common.UserRegisterResponse{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
@@ -28,10 +31,11 @@ func UserRegister(c *gin.Context) {
 		})
 		return
 	}
+	log.Println("用户", username, "注册成功。")
 	c.JSON(http.StatusOK, common.UserRegisterResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "Register: success"},
+			StatusMsg:  "注册成功"},
 		UserIdTokenResponse: registerResponse,
 	})
 }
@@ -45,6 +49,7 @@ func UserLogin(c *gin.Context) {
 
 	// 用户不存在返回对应的错误
 	if err != nil {
+		log.Println("controller-UserInfo: 用户登录失败,", err)
 		c.JSON(http.StatusOK, common.UserLoginResponse{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
@@ -56,10 +61,11 @@ func UserLogin(c *gin.Context) {
 	}
 
 	// 用户存在，返回相应的id和token
+	log.Println("用户", username, "登录成功。")
 	c.JSON(http.StatusOK, common.UserLoginResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "Login: success"},
+			StatusMsg:  "登陆成功"},
 		UserIdTokenResponse: userLoginResponse,
 	})
 }
@@ -70,14 +76,9 @@ func UserInfo(c *gin.Context) {
 	rawId := c.Query("user_id")
 	userInfoResponse, err := service.UserInfoService(rawId)
 
-	// 根据token获得当前用户的userid
-	token := c.Query("token")
-	tokenStruct, _ := middleware.CheckToken(token)
-	hostId := tokenStruct.UserId
-	userInfoResponse.IsFollow = service.IsFollow(rawId, hostId)
-
 	// 用户不存在返回对应的错误
 	if err != nil {
+		log.Println("controller-UserInfo: 查找用户信息失败", err)
 		c.JSON(http.StatusOK, common.UserInfoResponse{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
@@ -88,11 +89,18 @@ func UserInfo(c *gin.Context) {
 		return
 	}
 
+	// 根据token获得当前用户的userid
+	token := c.Query("token")
+	tokenStruct, _ := middleware.CheckToken(token)
+	hostId := tokenStruct.UserId
+	userInfoResponse.IsFollow = service.IsFollow(rawId, hostId)
+
 	// 用户存在，返回相应的id和token
+	log.Println("获取用户id", rawId, "的信息成功。")
 	c.JSON(http.StatusOK, common.UserInfoResponse{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
-			StatusMsg:  "Get user info: success",
+			StatusMsg:  "获取用户信息成功",
 		},
 		UserList: userInfoResponse,
 	})

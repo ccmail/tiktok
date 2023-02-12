@@ -17,7 +17,7 @@ type UserLoginResponse struct {
 }
 
 type UserInfoQueryResponse struct {
-	UserId        uint   `json:"id"`
+	UserID        uint   `json:"id"`
 	Username      string `json:"name"`
 	FollowCount   uint   `json:"follow_count"`
 	FollowerCount uint   `json:"follower_count"`
