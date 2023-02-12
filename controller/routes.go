@@ -1,7 +1,7 @@
 package controller
 
 import (
-	middleware "tiktok/pkg/middleware"
+	"tiktok/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,8 +22,6 @@ func InitRouter() *gin.Engine {
 		// publish路由组
 		publishGroup := g.Group("/publish")
 		{
-			//publishGroup.POST("/action/", middleware.JwtMiddleware(), Publish)
-			//publishGroup.GET("/list/", middleware.JwtMiddleware(), PublishList)
 			publishGroup.POST("/action/", middleware.JwtMiddleware(), Publish)
 			//publishGroup.GET("/list/", middleware.JwtMiddleware(), PublishList)
 			publishGroup.GET("/list/", PublishList)
@@ -31,14 +29,13 @@ func InitRouter() *gin.Engine {
 		}
 
 		// feed
-		//g.GET("/feed/", Feed)
 		g.GET("/feed/", Feed)
 
-		// favoriteGroup := g.Group("favorite")
-		// {
-		// 	favoriteGroup.POST("/action/", middleware.JwtMiddleware(), controller.Favorite)
-		// 	favoriteGroup.GET("/list/", middleware.JwtMiddleware(), controller.FavoriteList)
-		// }
+		favoriteGroup := g.Group("/favorite")
+		{
+			favoriteGroup.POST("/action/", middleware.JwtMiddleware(), Like)
+			favoriteGroup.GET("/list/", middleware.JwtMiddleware(), LikeList)
+		}
 
 		// // comment路由组
 		// commentGroup := g.Group("/comment")

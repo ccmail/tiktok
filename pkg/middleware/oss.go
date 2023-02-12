@@ -12,11 +12,12 @@ import (
 )
 
 var (
-	once                 sync.Once
-	ossServerInstance    *OssServer
-	ossConfig            *OssConfig
-	Bucket               *oss.Bucket
-	BucketName, EndPoint string
+	once              sync.Once
+	ossServerInstance *OssServer
+	ossConfig         *OssConfig
+	Bucket            *oss.Bucket
+	EndPoint          string
+	BucketName        string
 )
 
 type OssConfig struct {

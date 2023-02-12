@@ -1,6 +1,6 @@
 package common
 
-// user related responses
+// UserIdTokenResponse user related responses
 type UserIdTokenResponse struct {
 	UserId uint   `json:"user_id"`
 	Token  string `json:"token"`
@@ -17,7 +17,7 @@ type UserLoginResponse struct {
 }
 
 type UserInfoQueryResponse struct {
-	UserId        uint   `json:"id"`
+	UserID        uint   `json:"id"`
 	Username      string `json:"name"`
 	FollowCount   uint   `json:"follow_count"`
 	FollowerCount uint   `json:"follower_count"`

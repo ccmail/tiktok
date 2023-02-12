@@ -3,8 +3,8 @@ package errno
 import "errors"
 
 var (
-	ErrorUserNameNull      = errors.New("用户名为空")
-	ErrorUserNameExtend    = errors.New("用户名长度不符合规范")
+	ErrorUsernameNull      = errors.New("用户名为空")
+	ErrorUsernameExtend    = errors.New("用户名长度不符合规范")
 	ErrorPasswordNull      = errors.New("密码为空")
 	ErrorPasswordLength    = errors.New("密码长度不符合规范")
 	ErrorRedundantUsername = errors.New("用户名已存在")

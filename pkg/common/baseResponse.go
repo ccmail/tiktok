@@ -5,7 +5,7 @@ type BaseResponse struct {
 	StatusMsg  string `json:"status_msg,omitempty"`
 }
 
-// video related responses
+// ReturnAuthor video related responses
 type ReturnAuthor struct {
 	AuthorId      uint   `json:"author_id"`
 	Name          string `json:"name"`

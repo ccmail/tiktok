@@ -73,4 +73,12 @@
 
 2. 如果按照1执行,现在是先实现功能后期再改, 还是初步实现时就
 
-    
+# 合并
+
+## 2023.2.12
+
+1. `routers`中, 取消了PublishList的鉴权
+2. `userMap`中, 添加了根据多个userID查询`userInfo`的方法`FindMultiUserInfo`\
+3. `Video`结构体中, likeCount字段更新为FavoriteCount
+4. `pkg/middleware/auth.go:48`中checkToken更改paresToken
+5. 根据ide提示修改了一些代码样式问题
