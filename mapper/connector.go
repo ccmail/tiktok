@@ -64,6 +64,42 @@ func InitDBConnector() (err error) {
 	return nil
 }
 
+// 从数据库配置文件中获取DSN
+func getDSNSupportTest() string {
+	//yamlFile, err := os.ReadFile("./config/db.yaml")
+	yamlFile, err := os.ReadFile("E:\\OneDrive\\MyCode\\Go\\TikTok\\config\\db.yaml")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	err = yaml.Unmarshal(yamlFile, &dbConfig)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		dbConfig.UserName,
+		dbConfig.PassWord,
+		dbConfig.Host,
+		dbConfig.Port,
+		dbConfig.DBName,
+	)
+	return dsn
+}
+
+func InitDBConnectorSupportTest() (err error) {
+	dsn := getDSNSupportTest()
+	DBConn, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+
+	// 配置连接池
+	sqlDB, _ := DBConn.DB()
+	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConns)
+	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConns)
+
+	return nil
+}
+
 func createDateTable(t interface{}) error {
 	if !DBConn.Migrator().HasTable(t) {
 		err := DBConn.AutoMigrate(t)

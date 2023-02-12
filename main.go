@@ -14,7 +14,7 @@ func main() {
 	}
 	middleware.InitLog()
 	// 连接OSS服务
-	err = mapper.InitOSS()
+	err = middleware.InitOSS()
 	if err != nil {
 		panic(err)
 	}

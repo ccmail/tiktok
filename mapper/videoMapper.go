@@ -1,7 +1,9 @@
 package mapper
 
 import (
+	"tiktok/config"
 	"tiktok/model"
+	"time"
 )
 
 // CreateVideo 添加一条视频信息
@@ -14,11 +16,18 @@ func CreateVideo(video *model.Video) error {
 	return nil
 
 }
-func FindVideoList(userId uint) ([]model.Video, error) {
-	var videoList []model.Video
-	find := DBConn.Table("videos").Where("author_id=?", userId).Find(&videoList)
+func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
+	find := DBConn.Table("videos").Where("author_id=?", userId).Find(&resultVideos)
 	if find.Error != nil {
-		return videoList, find.Error
+		err = find.Error
 	}
-	return videoList, nil
+	return resultVideos, err
+}
+
+func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err error) {
+	find := DBConn.Table("videos").Where("created_at < ?", lastTime).Order("created_at desc").Limit(config.MaxFeedVideoCount).Find(&resultVideos)
+	if find.Error != nil {
+		err = find.Error
+	}
+	return resultVideos, err
 }
