@@ -50,7 +50,7 @@ func ParseToken(token string) (*MyClaims, bool) {
 		return []byte(config.Key), nil
 	})
 	if err != nil {
-		log.Println("token无效, 请检查token", err)
+		log.Panicln("token无效, 请检查token", err)
 		return nil, false
 	}
 	if key, _ := tokenObj.Claims.(*MyClaims); tokenObj.Valid {

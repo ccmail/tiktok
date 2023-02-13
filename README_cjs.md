@@ -6,6 +6,7 @@
 
 2. ~~video方面的feed()内容~~
 3. ~~get请求获取不到token,不清楚原因~~
+4. 抓包, 查看访问author的publishlist等页面, 客户端发送的数据
 
 # 改动
 
@@ -65,6 +66,12 @@
 1. `util/removeIllegalChar.go:6`, 因为上传oss过程中, 存储名称存在" "等字符会报错, 因此使用其去除文件名中的非法字符,
    用以存储到oss中, 非法字符的定义详见`config/config.go:10`
 2. 将从数据库中查到的字段, 封装为响应体的这一过程抽象为方法, 实现复用. 例如`publishList`和`Feed`中, 部分方法可以复用
+
+## 2023.2.13
+
+1. `pkg/common/userResponse.go:27`中, 新增userInfoList, 返回用户信息列表
+2. `model/followerModel.go:5`host和guest对应id类型更改为uint, (uint64->uint). **但是第三届有个作品的缺点,
+   就是没有考虑到uint在32位机器上长度和64位机器上长度区别**
 
 # 疑问
 

@@ -89,3 +89,22 @@ func FindMultiUserInfo(multiUserID []uint) (map[uint]model.User, error) {
 	}
 	return mp, nil
 }
+
+// UpdateUserFollowCount host关注guest, 所以host是被关注的人, guest是up, 所以关注操作, host.follow+1, guest.follower+1
+func UpdateUserFollowCount(hostID, guestID uint, isConcern bool) error {
+	x := 1
+	if !isConcern {
+		x = -1
+	}
+	tx := DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("FollowCount", x)
+	if tx.Error != nil {
+		log.Panicln("更新关注人数时出错")
+		return tx.Error
+	}
+	tx = DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("FollowerCount", x)
+	if tx.Error != nil {
+		log.Panicln("更新粉丝人数时出错")
+		return tx.Error
+	}
+	return nil
+}

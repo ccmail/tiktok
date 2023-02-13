@@ -11,6 +11,10 @@ import (
 
 // IsFavorite 查询某用户是否点赞某视频
 func IsFavorite(uid uint, vid uint) bool {
+	if uid == 0 {
+		//uid为0代表用户未登录, 默认返回false, 代表未关注
+		return false
+	}
 	var total int64
 	err := DBConn.Table("likes").Where("user_id = ? AND video_id = ? AND is_like = ?", uid, vid, true).Count(&total).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -63,7 +63,6 @@ func Publish(ctx *gin.Context) {
 }
 
 func PublishList(ctx *gin.Context) {
-	//var hostToken string
 	hostToken := ctx.Query("token")
 	//假设用户处于未登录状态, 也应该可以访问某位作者的发布列表
 	if hostToken == "" {

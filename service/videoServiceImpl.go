@@ -20,9 +20,9 @@ import (
 // 如果上述流程中出现了一场, 返回值为("",err), err为对应的错误信息
 // 流程正常, 返回上传到文件服务器上的名称和nil, 即(saveName,nil)
 func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) (string, error) {
-	parseToken, ok := middleware.ParseToken(token)
-	if !ok {
-		return "", errors.New("token失效")
+	parseToken, err := middleware.ParseTokenCJS(token)
+	if err != nil {
+		return "", err
 	}
 	fileName := filepath.Base(file.Filename)
 	//存储到文件服务器中的文件名字, 为了避免重复, 这里使用用户id+时间戳+文件名命名
@@ -31,7 +31,7 @@ func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) 
 	saveName = util.RemoveIllegalChar(saveName)
 	savePath := filepath.Join("./videos/", saveName)
 	//保存视频到本地
-	err := util.SaveFileLocal(file, savePath)
+	err = util.SaveFileLocal(file, savePath)
 	if err != nil {
 		log.Panicln("文件保存失败", err)
 		return "", err
@@ -150,7 +150,7 @@ func (t *VideoService) Feed(token string, strLastTime string) ([]common.VideoRes
 	return feedVideos, nextTime.Unix(), nil
 }
 
-func packVideoInfo(videos model.Video, author common.AuthorResp, hostID uint) common.VideoResp {
+func packVideoInfo(videos model.Video, author common.UserInfoResp, hostID uint) common.VideoResp {
 	returnVideo := common.VideoResp{
 		Id:            videos.ID,
 		Author:        author,
@@ -158,40 +158,25 @@ func packVideoInfo(videos model.Video, author common.AuthorResp, hostID uint) co
 		CoverUrl:      videos.CoverUrl,
 		FavoriteCount: videos.FavoriteCount,
 		CommentCount:  videos.CommentCount,
-		IsFavorite:    IsFavorite(hostID, videos.ID),
+		IsFavorite:    mapper.IsFavorite(hostID, videos.ID),
 		Title:         videos.Title,
 	}
 	return returnVideo
 }
 
 // 包装user信息, 将其包装为response格式
-func packUserInfo(guestInfo model.User, hostID uint) common.AuthorResp {
-	author := common.AuthorResp{
+func packUserInfo(guestInfo model.User, hostID uint) common.UserInfoResp {
+	author := common.UserInfoResp{
 		AuthorId:      guestInfo.ID,
 		Name:          guestInfo.Name,
 		FollowCount:   guestInfo.FollowCount,
 		FollowerCount: guestInfo.FollowerCount,
-		IsFollow:      IsFollowing(hostID, guestInfo.ID),
+		IsFollow:      mapper.CheckFollowing(hostID, guestInfo.ID),
 	}
 	return author
 }
 
-// IsFavorite 查询某用户是否点赞某视频
-func IsFavorite(uid uint, vid uint) bool {
-	if uid == 0 {
-		//uid为0代表用户未登录, 默认返回false, 代表未关注
-		return false
-	}
-	var total int64
-	err := mapper.DBConn.Table("likes").Where("user_id = ? AND video_id = ? AND is_like = ?", uid, vid, true).Count(&total).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return false
-	}
-	if total == 0 {
-		return false
-	}
-	return true
-}
+//从token返回id, 只有不强制需要使用token鉴权的方法才能用!!
 func getHostIDFromToken(hostToken string) uint {
 	var hostID uint
 	if hostToken != "" {

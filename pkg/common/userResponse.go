@@ -23,8 +23,20 @@ type UserInfoQueryResponse struct {
 	FollowerCount uint   `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
 }
-
 type UserInfoResponse struct {
 	BaseResponse
 	UserList UserInfoQueryResponse `json:"user"`
+}
+
+type UserInfoListResp struct {
+	BaseResponse
+	UserList []UserInfoResp `json:"user_list"`
+}
+
+type UserInfoResp struct {
+	AuthorId      uint   `json:"id"`
+	Name          string `json:"name"`
+	FollowCount   uint   `json:"follow_count"`
+	FollowerCount uint   `json:"follower_count"`
+	IsFollow      bool   `json:"is_follow"`
 }

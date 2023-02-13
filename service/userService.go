@@ -119,7 +119,7 @@ func UserLoginService(username string, password string) (common.UserIdTokenRespo
 	return userResponse, nil
 }
 
-// IsFollow 检验已登录用户是否关注目标用户
+// IsFollow 检验已登录用户是否关注目标用户,
 func IsFollow(targetId string, userid uint) bool {
 	// 修改targetId数据类型
 	hostId, err := strconv.ParseUint(targetId, 10, 64)
