@@ -5,15 +5,22 @@ import (
 	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/common"
+	"tiktok/pkg/errno"
 )
 
 func LikeService(userID uint, videoID uint, actionType uint) error {
+	// 首先要保证视频存在
+	_, videoExist := mapper.ExistVideo(videoID)
+	if !videoExist {
+		log.Println("service-LikeService: 点赞失败，未找到对应视频")
+		return errno.ErrorNullVideo
+	}
 	//如果没有记录-Create，如果有了记录-修改IsLike
-	likeExist, flagExist := mapper.ExistLikeRecord(userID, videoID)
-	if !flagExist { // 不存在记录
+	likeRecord, likeExist := mapper.ExistLikeRecord(userID, videoID)
+	if !likeExist { // 不存在记录
 		err := mapper.CreateLikeRecord(userID, videoID, true)
 		if err != nil {
-			log.Panicln("service-LikeService: 创建like记录失败，", err)
+			log.Println("service-LikeService: 创建like记录失败，", err)
 			return err
 		}
 		// //userId的like_count增加
@@ -29,7 +36,7 @@ func LikeService(userID uint, videoID uint, actionType uint) error {
 		// 	return err
 		// }
 	} else { // 存在记录
-		if !likeExist.IsLike { //IsLike为false，则video的like_count加1
+		if !likeRecord.IsLike { //IsLike为false，则video的like_count加1
 			mapper.UpdateLikeRecord(userID, videoID, true)
 			// //userId的like_count增加
 			// if err := mapper.AddLikeCount(userID); err != nil {
@@ -52,11 +59,17 @@ func LikeService(userID uint, videoID uint, actionType uint) error {
 }
 
 func CancelLikeService(userID uint, videoID uint) error {
-	likeRecord, flagExist := mapper.ExistLikeRecord(userID, videoID)
-	if !flagExist { // 不存在记录
+	// 首先要保证视频存在
+	_, videoExist := mapper.ExistVideo(videoID)
+	if !videoExist {
+		log.Println("service-LikeService: 点赞失败，未找到对应视频")
+		return errno.ErrorNullVideo
+	}
+	likeRecord, likeExist := mapper.ExistLikeRecord(userID, videoID)
+	if !likeExist { // 不存在记录
 		err := mapper.CreateLikeRecord(userID, videoID, false)
 		if err != nil {
-			log.Panicln("service-LikeService: 创建like记录失败，", err)
+			log.Println("service-LikeService: 创建like记录失败，", err)
 			return err
 		}
 	} else { // 存在记录
@@ -88,7 +101,7 @@ func LikeListService(userID uint) ([]model.Video, error) {
 func FillInfo(videoList []model.Video, userIdHost uint) []common.FavoriteVideo {
 	returnList := make([]common.FavoriteVideo, 0)
 	for _, m := range videoList {
-		var author = common.UserInfoQueryResponse{}
+		var author = common.AuthorInfo{}
 		var getAuthor = model.User{}
 		getAuthor, err := mapper.FindUserInfo(m.AuthorID)
 		if err != nil {

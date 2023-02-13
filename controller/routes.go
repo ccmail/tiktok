@@ -37,12 +37,12 @@ func InitRouter() *gin.Engine {
 			favoriteGroup.GET("/list/", middleware.JwtMiddleware(), LikeList)
 		}
 
-		// // comment路由组
-		// commentGroup := g.Group("/comment")
-		// {
-		// 	commentGroup.POST("/action/", middleware.JwtMiddleware(), controller.CommentAction)
-		// 	commentGroup.GET("/list/", middleware.JwtMiddleware(), controller.CommentList)
-		// }
+		// comment路由组
+		commentGroup := g.Group("/comment")
+		{
+			commentGroup.POST("/action/", middleware.JwtMiddleware(), Comment)
+			commentGroup.GET("/list/", CommentList)
+		}
 
 		// // relation路由组
 		// relationGroup := g.Group("relation")
