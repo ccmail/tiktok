@@ -25,7 +25,8 @@ func CreateLikeRecord(userID uint, videoID uint, islike bool) error {
 		return err
 	}
 	if islike {
-		DBConn.Table("videos").Where("id = ?", videoID).Update("like_count", gorm.Expr("like_count + 1"))
+		//DBConn.Table("videos").Where("id = ?", videoID).Update("like_count", gorm.Expr("like_count + 1"))
+		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 	}
 	return nil
 }
@@ -33,9 +34,9 @@ func CreateLikeRecord(userID uint, videoID uint, islike bool) error {
 func UpdateLikeRecord(userID uint, videoID uint, islike bool) {
 	DBConn.Table("likes").Where("user_id = ? AND video_id = ?", userID, videoID).Update("is_like", islike)
 	if islike {
-		DBConn.Table("videos").Where("id = ?", videoID).Update("like_count", gorm.Expr("like_count + 1"))
+		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 	} else {
-		DBConn.Table("videos").Where("id = ?", videoID).Update("like_count", gorm.Expr("like_count - 1"))
+		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count - 1"))
 	}
 }
 

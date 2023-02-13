@@ -203,6 +203,6 @@ func getHostIDFromToken(hostToken string) uint {
 			hostID = hostInfo.UserId
 		}
 	}
-	log.Println(hostID)
+	//log.Println(hostID)
 	return hostID
 }
