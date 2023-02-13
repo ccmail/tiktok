@@ -16,27 +16,37 @@ func Follow(token string, guestID uint, isConcern bool) error {
 		return err
 	}
 	record, exist := mapper.ExistFollowRecord(parseToken.UserId, guestID)
+	//如果不存在的话, 向follow插入信息, 并更新user表的字段
 	if !exist {
 		err := mapper.CreatFollowRecord(parseToken.UserId, guestID, isConcern)
 		if err != nil {
 			log.Panicln("插入数据库时发生错误")
 			return err
 		}
+		//从未关注过的话直接插, 更新完毕之后return掉
+		err = mapper.UpdateUserFollowCount(parseToken.UserId, guestID, isConcern)
+		if err != nil {
+			log.Panicln("更新粉丝/关注数量时出错")
+			return err
+		}
+		return nil
+		//mapper.UpdateUserFollowCount(parseToken.UserId, guestID)
 	}
+
 	if record.IsFollow == isConcern {
 		//关注关系没有变化
 		return nil
-	}
-	//向follow表中添加follow关系记录
-	err = mapper.UpdateFollowRecord(parseToken.UserId, guestID, isConcern)
-	if err != nil {
-		log.Panicln("更新关注关系时失败")
-		return err
 	}
 	//更新host的关注数, 并增加host关注的up数量, 增加up的粉丝数量
 	err = mapper.UpdateUserFollowCount(parseToken.UserId, guestID, isConcern)
 	if err != nil {
 		log.Panicln("更新粉丝/关注数量时出错")
+		return err
+	}
+	//向follow表中添加follow关系记录
+	err = mapper.UpdateFollowRecord(parseToken.UserId, guestID, isConcern)
+	if err != nil {
+		log.Panicln("更新关注关系时失败")
 		return err
 	}
 	return nil

@@ -31,7 +31,7 @@ func ExistFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist
 		return followRecord, false
 	}
 	if followRecord.ID == 0 {
-		log.Panicln("没有查找到相关关注记录")
+		log.Println("没有查找到相关关注记录")
 		return followRecord, false
 	}
 	return followRecord, true

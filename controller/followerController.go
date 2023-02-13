@@ -10,7 +10,7 @@ import (
 )
 
 func Follow(ctx *gin.Context) {
-	token := ctx.PostForm("token")
+	token := ctx.Query("token")
 	if token == "" {
 		ctx.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
@@ -20,7 +20,7 @@ func Follow(ctx *gin.Context) {
 		return
 	}
 	var guestID uint
-	guestIDStr := ctx.Query("user_id")
+	guestIDStr := ctx.Query("to_user_id")
 	if atoi, err := strconv.Atoi(guestIDStr); err != nil || guestIDStr == "" {
 		ctx.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
@@ -33,7 +33,7 @@ func Follow(ctx *gin.Context) {
 	}
 	//true表示关注, false表示取关
 	var isConcern bool
-	if op := ctx.PostForm("action_type"); op == "" {
+	if op := ctx.Query("action_type"); op == "" {
 		ctx.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
 			StatusMsg:  "关注/取关操作失败, 请重试",
