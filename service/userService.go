@@ -1,13 +1,14 @@
 package service
 
 import (
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
 	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
 	"tiktok/pkg/middleware"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -150,7 +151,7 @@ func isLegal(username string, password string) error {
 	//1.用户名检验
 	if username == "" {
 		log.Println("用户名为空")
-		return errno.ErrorUsernameNull
+		return errno.ErrorNullUsername
 	}
 	if len(username) > MaxUsernameLength {
 		log.Printf("用户名过长，应小于%d位\n", MaxUsernameLength)
@@ -160,7 +161,7 @@ func isLegal(username string, password string) error {
 	//2.密码检验
 	if password == "" {
 		log.Panicln("密码为空")
-		return errno.ErrorPasswordNull
+		return errno.ErrorNullPassword
 	}
 	if len(password) > MaxPasswordLength {
 		log.Printf("密码过长，应小于%d位\n", MaxPasswordLength)

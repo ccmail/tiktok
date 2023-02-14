@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"errors"
+	"log"
 	"tiktok/config"
 	"tiktok/model"
 	"time"
@@ -50,4 +51,39 @@ func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err e
 		err = find.Error
 	}
 	return resultVideos, err
+}
+
+// ExistVideo 检查videos表中是否存在vid对应的视频
+func ExistVideo(vid uint) (video model.Video, flagExist bool) {
+	err := DBConn.Table("videos").Where("ID = ?", vid).First(&video).Error
+	return video, !errors.Is(err, gorm.ErrRecordNotFound)
+}
+
+// ReduceCommentCount 增加video记录中的评论计数
+func AddCommentCount(vid uint) error {
+	err := DBConn.Table("videos").Where("id = ?", vid).Update("comment_count", gorm.Expr("comment_count + 1")).Error
+	if err != nil {
+		log.Panicln("mapper-AddCommentCount: 增加视频的评论数量失败")
+		return err
+	}
+	return nil
+}
+
+// ReduceCommentCount 减少video记录中的评论计数
+func ReduceCommentCount(videoId uint) error {
+
+	err := DBConn.Table("videos").Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1")).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetVideoAuthor(videoId uint) (uint, error) {
+	var video model.Video
+	err := DBConn.Table("videos").Where("id = ?", videoId).Find(&video).Error
+	if err != nil {
+		return video.ID, err
+	}
+	return video.AuthorID, nil
 }

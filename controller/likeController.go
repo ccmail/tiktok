@@ -43,6 +43,7 @@ func Like(c *gin.Context) {
 	} else if actionType == 2 {
 		err := service.CancelLikeService(userId, uint(videoId))
 		if err != nil {
+			log.Panicln("controller-Like: 取消点赞失败，", err)
 			c.JSON(http.StatusBadRequest, common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  err.Error(),
