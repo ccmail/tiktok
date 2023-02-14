@@ -56,6 +56,7 @@ func UserInfoService(rawId string) (common.UserInfoQueryResponse, error) {
 	userId, err := strconv.ParseUint(rawId, 10, 64)
 	if err != nil {
 		log.Panicln("service-UserInfoService: 解析rawID时发生错误， ", err)
+		return userInfoQueryResponse, err
 	}
 
 	// 获取用户信息

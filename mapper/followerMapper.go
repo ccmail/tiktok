@@ -62,7 +62,16 @@ func UpdateFollowRecord(hostID, guestID uint, isConcern bool) error {
 
 // FindMultiConcern 返回关注id关注的人, 实现逻辑是将id作为粉丝id进行查询
 func FindMultiConcern(id uint) (resUserIDList []uint, err error) {
-	tx := DBConn.Model(&model.Follower{}).Select("user_id").Where("follower_id = ?", id).Find(&resUserIDList)
+	tx := DBConn.Model(&model.Follower{}).Select("user_id").Where("follower_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
+	if tx.Error != nil {
+		log.Panicln("查询用户关注信息时失败")
+		return resUserIDList, tx.Error
+	}
+	return resUserIDList, nil
+}
+
+func FindMultiFollower(id uint) (resUserIDList []uint, err error) {
+	tx := DBConn.Model(&model.Follower{}).Select("follower_id").Where("user_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
 	if tx.Error != nil {
 		log.Panicln("查询用户关注信息时失败")
 		return resUserIDList, tx.Error

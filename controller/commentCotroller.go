@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/middleware"
 	"tiktok/service"
@@ -54,7 +55,7 @@ func Comment(c *gin.Context) {
 					FollowCount:   commenter.FollowCount,
 					FollowerCount: commenter.FollowerCount,
 					// TODO: IsFollowing包含了DAO操作，后面要移到mapper里去
-					IsFollow: service.IsFollowing(userId, author),
+					IsFollow: mapper.CheckFollowing(userId, author),
 				},
 			},
 		})

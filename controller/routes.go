@@ -47,6 +47,8 @@ func InitRouter() *gin.Engine {
 		{
 			followGroup.POST("/action/", middleware.JwtMiddleware(), Follow)
 			followGroup.GET("/follow/list/", middleware.JwtMiddleware(), FollowList)
+			followGroup.GET("/follower/list/", middleware.JwtMiddleware(), FollowerList)
+			followGroup.GET("/friend/list/", middleware.JwtMiddleware(), FriendList)
 			//followGroup.GET("/follow/list/", FollowList)
 		}
 		// // comment路由组

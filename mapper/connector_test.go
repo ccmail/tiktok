@@ -5,7 +5,7 @@ import (
 )
 
 func TestInitDBConnector(t *testing.T) {
-	err := InitDBConnector()
+	err := InitDBConnectorSupportTest()
 	if err != nil {
 		t.Error("连接数据库失败")
 	}

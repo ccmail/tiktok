@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"tiktok/model"
 	"tiktok/pkg/errno"
@@ -92,28 +93,19 @@ func FindMultiUserInfo(multiUserID []uint) (map[uint]model.User, error) {
 
 // UpdateUserFollowCount host关注guest, 所以host是被关注的人, guest是up, 所以关注操作, host.follow+1, guest.follower+1
 func UpdateUserFollowCount(hostID, guestID uint, isConcern bool) error {
-	if isConcern {
-		tx := DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("follow_count", gorm.Expr("follow_count + 1"))
-		if tx.Error != nil {
-			log.Panicln("更新关注人数时出错")
-			return tx.Error
-		}
-		tx = DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("follower_count", gorm.Expr("follower_count + 1"))
-		if tx.Error != nil {
-			log.Panicln("更新粉丝人数时出错")
-			return tx.Error
-		}
-	} else {
-		tx := DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("follow_count", gorm.Expr("follow_count - 1"))
-		if tx.Error != nil {
-			log.Panicln("更新关注人数时出错")
-			return tx.Error
-		}
-		tx = DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("follower_count", gorm.Expr("follower_count - 1"))
-		if tx.Error != nil {
-			log.Panicln("更新粉丝人数时出错")
-			return tx.Error
-		}
+	x := " + 1"
+	if !isConcern {
+		x = " - 1"
+	}
+	tx := DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("follow_count", gorm.Expr(fmt.Sprint("follow_count", x)))
+	if tx.Error != nil {
+		log.Panicln("更新关注人数时出错")
+		return tx.Error
+	}
+	tx = DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("follower_count", gorm.Expr(fmt.Sprint("follower_count ", x)))
+	if tx.Error != nil {
+		log.Panicln("更新粉丝人数时出错")
+		return tx.Error
 	}
 	return nil
 }
