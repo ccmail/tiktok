@@ -62,7 +62,7 @@ func DelCommentTx(commentID uint, videoID uint) error {
 
 // GetCommentList 获取一个视频的评论列表
 func GetCommentList(videoID uint) (commentList []model.Comment, err error) {
-	err = DBConn.Table("comments").Where("video_id=? AND valid=?", videoID, true).Find(&commentList).Error
+	err = DBConn.Table("comments").Where("video_id=? AND valid=?", videoID, true).Order("created_at desc").Find(&commentList).Error
 	if err != nil {
 		log.Println("mapper-GetCommentList: 查表获取评论列表失败，", err)
 		return []model.Comment{{}}, err

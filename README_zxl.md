@@ -82,3 +82,23 @@
 - 删去了路由中列表接口的鉴权中间件
 - 新增service/commentService.go, pkg/common/commentResponse.go
 - 修改service/followerService.go中的IsFollowing函数，修改为调用mapper层的checkFollowing实现
+
+# zxl, 2023.2.14
+
+## 修正评论列表接口
+
+- mapper/commentMapper.go，获取评论列表时，将其按发布时间倒序排序
+
+## 实现发送消息、聊天记录接口
+
+- 新增controller/messageController.go, messageService.go
+- 实现messageMapper.go
+- Message实体删去添加gorm.Model字段，ID、UserHeadPicURL、FriendHeadPicURL、Username、FriendName字段（需要重新建表），相关接口并没有用到这些字段
+
+## 构思了一下在加Redis缓存的思路
+以下接口可以优先加Redis缓存
+- 点赞
+- 关注
+- 评论
+
+> 但是加Redis要写的代码估计挺多。看了下第一名的实现，有redis缓存的情况下，代码比较复杂

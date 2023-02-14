@@ -6,7 +6,6 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.6+incompatible
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.8.2
-	github.com/sirupsen/logrus v1.9.0
 	github.com/u2takey/ffmpeg-go v0.4.1
 	golang.org/x/crypto v0.5.0
 	gopkg.in/yaml.v2 v2.4.0

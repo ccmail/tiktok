@@ -51,6 +51,13 @@ func InitRouter() *gin.Engine {
 		// 	relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
 		// 	relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
 		// }
+
+		// message路由组
+		messageGroup := g.Group("/message")
+		{
+			messageGroup.POST("/action/", middleware.JwtMiddleware(), Message)
+			messageGroup.GET("/chat/", middleware.JwtMiddleware(), MessageList)
+		}
 	}
 
 	return r
