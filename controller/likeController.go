@@ -20,9 +20,9 @@ func Like(c *gin.Context) {
 	}
 
 	actionTypeStr := c.Query("action_type")
-	actionType, _ := strconv.ParseUint(actionTypeStr, 10, 10)
+	actionType, _ := strconv.ParseUint(actionTypeStr, 10, 32)
 	videoIdStr := c.Query("video_id")
-	videoId, _ := strconv.ParseUint(videoIdStr, 10, 10)
+	videoId, _ := strconv.ParseUint(videoIdStr, 10, 64)
 
 	// 函数调用及响应
 	if actionType == 1 {
@@ -70,7 +70,7 @@ func LikeList(c *gin.Context) {
 		userIdHost = v
 	}
 	userIdStr := c.Query("user_id") // 目标用户的id
-	userId, _ := strconv.ParseUint(userIdStr, 10, 10)
+	userId, _ := strconv.ParseUint(userIdStr, 10, 64)
 	userIdNew := uint(userId)
 	if userIdNew == 0 {
 		userIdNew = userIdHost
