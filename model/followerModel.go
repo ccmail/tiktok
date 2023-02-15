@@ -6,7 +6,7 @@ type Follower struct {
 	gorm.Model
 	//粉丝id
 	FollowerID uint
-	//upid
+	//up id
 	UserID uint
 	//冗余字段, 避免多表查询带来的IO损失
 	FollowerName string

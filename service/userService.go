@@ -7,6 +7,7 @@ import (
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
 	"tiktok/pkg/middleware"
+	"tiktok/util"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,14 +15,14 @@ import (
 const (
 	MaxUsernameLength = 32 //用户名最大长度
 	MaxPasswordLength = 32 //密码最大长度
-	MinPasswordLength = 8  //密码最小长度
+	//MinPasswordLength = 8  //密码最小长度
 )
 
 // UserRegisterService 用户注册服务
-func UserRegisterService(username string, password string) (common.UserIdTokenResponse, error) {
+func UserRegisterService(username string, password string) (common.UserIdTokenResp, error) {
 
 	//0.数据准备
-	var userResponse = common.UserIdTokenResponse{}
+	var userResponse = common.UserIdTokenResp{}
 
 	//1.合法性检验
 	err := isLegal(username, password)
@@ -42,7 +43,7 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 		return userResponse, err
 	}
 
-	userResponse = common.UserIdTokenResponse{
+	userResponse = common.UserIdTokenResp{
 		UserId: newUser.ID,
 		Token:  token,
 	}
@@ -50,9 +51,9 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 }
 
 // UserInfoService 用户信息获取服务
-func UserInfoService(rawId string) (common.UserInfoQueryResponse, error) {
+func UserInfoService(rawId string) (common.UserInfoResp, error) {
 	// 数据准备
-	var userInfoQueryResponse = common.UserInfoQueryResponse{}
+	var userInfoQueryResponse = common.UserInfoResp{}
 	userId, err := strconv.ParseUint(rawId, 10, 64)
 	if err != nil {
 		log.Panicln("service-UserInfoService: 解析rawID时发生错误， ", err)
@@ -65,21 +66,16 @@ func UserInfoService(rawId string) (common.UserInfoQueryResponse, error) {
 		return userInfoQueryResponse, err
 	}
 
-	userInfoQueryResponse = common.UserInfoQueryResponse{
-		UserID:        user.Model.ID,
-		Username:      user.Name,
-		FollowCount:   user.FollowCount,
-		FollowerCount: user.FollowerCount,
-		IsFollow:      false,
-	}
+	userInfoQueryResponse = util.PackUserInfo(user, false)
+
 	return userInfoQueryResponse, nil
 }
 
 // UserLoginService 用户登录服务
-func UserLoginService(username string, password string) (common.UserIdTokenResponse, error) {
+func UserLoginService(username string, password string) (common.UserIdTokenResp, error) {
 
 	// 数据准备
-	var userResponse = common.UserIdTokenResponse{}
+	var userResponse = common.UserIdTokenResp{}
 
 	// 合法性检验
 	err := isLegal(username, password)
@@ -113,7 +109,7 @@ func UserLoginService(username string, password string) (common.UserIdTokenRespo
 		return userResponse, err
 	}
 
-	userResponse = common.UserIdTokenResponse{
+	userResponse = common.UserIdTokenResp{
 		UserId: user.Model.ID,
 		Token:  token,
 	}
@@ -151,11 +147,11 @@ func checkPassword(requestPassword string, truePassword string) bool {
 func isLegal(username string, password string) error {
 	//1.用户名检验
 	if username == "" {
-		log.Println("用户名为空")
+		log.Panicln("用户名为空")
 		return errno.ErrorNullUsername
 	}
 	if len(username) > MaxUsernameLength {
-		log.Printf("用户名过长，应小于%d位\n", MaxUsernameLength)
+		log.Panicf("用户名过长，应小于%d位\n", MaxUsernameLength)
 		return errno.ErrorUsernameExtend
 	}
 
@@ -165,7 +161,7 @@ func isLegal(username string, password string) error {
 		return errno.ErrorNullPassword
 	}
 	if len(password) > MaxPasswordLength {
-		log.Printf("密码过长，应小于%d位\n", MaxPasswordLength)
+		log.Panicf("密码过长，应小于%d位\n", MaxPasswordLength)
 		return errno.ErrorPasswordLength
 	}
 	return nil

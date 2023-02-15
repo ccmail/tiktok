@@ -6,6 +6,7 @@ import (
 	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/middleware"
+	"tiktok/util"
 )
 
 // Follow
@@ -17,7 +18,7 @@ func Follow(token string, guestID uint, isConcern bool) error {
 		return err
 	}
 	if parseToken.UserId == guestID {
-		return errors.New("请不要自己关注自己!")
+		return errors.New("请不要自己关注自己")
 	}
 	record, exist := mapper.ExistFollowRecord(parseToken.UserId, guestID)
 	//如果不存在的话, 向follow插入信息, 并更新user表的字段
@@ -58,7 +59,8 @@ func Follow(token string, guestID uint, isConcern bool) error {
 
 // FollowList 用户token去请求guestID对应的关注列表
 func FollowList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := getHostIDFromToken(token)
+	hostID := util.GetHostIDFromToken(token)
+
 	//这里请求出来有两步, 如果tokenID==guestID, 直接返回, 默认全部关注
 	//如果tokenID!=guestID, 还需要判断请求出来的user和token的关注关系
 	userIDList, err := mapper.FindMultiConcern(guestID)
@@ -75,24 +77,18 @@ func FollowList(token string, guestID uint) (resList []common.UserInfoResp, err 
 
 	resList = make([]common.UserInfoResp, 0, len(userInfoList))
 	for _, upInfo := range userInfoList {
+		isFollowing := true
 		if hostID != guestID {
-			resList = append(resList, packUserInfo(upInfo, hostID))
-		} else {
-			resList = append(resList, common.UserInfoResp{
-				AuthorId:      upInfo.ID,
-				Name:          upInfo.Name,
-				FollowCount:   upInfo.FollowCount,
-				FollowerCount: upInfo.FollowerCount,
-				IsFollow:      true,
-			})
+			isFollowing = mapper.CheckFollowing(hostID, upInfo.ID)
 		}
+		resList = append(resList, util.PackUserInfo(upInfo, isFollowing))
 	}
 	return resList, nil
 }
 
 // FollowerList 请求粉丝列表, 和请求关注列表逻辑一致, 不同的是需要更改一下查询数据库的信息
 func FollowerList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := getHostIDFromToken(token)
+	hostID := util.GetHostIDFromToken(token)
 
 	userIDList, err := mapper.FindMultiFollower(guestID)
 	if err != nil {
@@ -108,14 +104,15 @@ func FollowerList(token string, guestID uint) (resList []common.UserInfoResp, er
 
 	resList = make([]common.UserInfoResp, 0, len(userInfoList))
 	for _, upInfo := range userInfoList {
-		resList = append(resList, packUserInfo(upInfo, hostID))
+		resList = append(resList, util.PackUserInfo(upInfo, mapper.CheckFollowing(hostID, upInfo.ID)))
 	}
 	return resList, nil
 }
 
 // FriendList	这里要做一下过滤, 只有自己能看自己的好友列表, 当guestID与token不符时应当直接返回
 func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := getHostIDFromToken(token)
+	hostID := util.GetHostIDFromToken(token)
+
 	if hostID != guestID {
 		return resList, errors.New("请求好友列表的id和token不一致, 不允许偷看别人的好友列表")
 	}
@@ -148,13 +145,7 @@ func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err 
 	}
 	resList = make([]common.UserInfoResp, 0, len(multiUserInfo))
 	for _, userInfo := range multiUserInfo {
-		resList = append(resList, common.UserInfoResp{
-			AuthorId:      userInfo.ID,
-			Name:          userInfo.Name,
-			FollowCount:   userInfo.FollowCount,
-			FollowerCount: userInfo.FollowerCount,
-			IsFollow:      true,
-		})
+		resList = append(resList, util.PackUserInfo(userInfo, true))
 	}
 	return resList, nil
 }

@@ -22,21 +22,21 @@ func UserRegister(c *gin.Context) {
 	//3.返回响应
 	if err != nil {
 		log.Println("controller-UserRegister: 注册失败: 用户名: ", username, ", 密码: ", password)
-		c.JSON(http.StatusOK, common.UserRegisterResponse{
+		c.JSON(http.StatusOK, common.UserSignBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  err.Error(),
 			},
-			UserIdTokenResponse: common.UserIdTokenResponse{},
+			UserIdTokenResp: common.UserIdTokenResp{},
 		})
 		return
 	}
 	log.Println("用户", username, "注册成功。")
-	c.JSON(http.StatusOK, common.UserRegisterResponse{
+	c.JSON(http.StatusOK, common.UserSignBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "注册成功"},
-		UserIdTokenResponse: registerResponse,
+		UserIdTokenResp: registerResponse,
 	})
 }
 
@@ -50,23 +50,23 @@ func UserLogin(c *gin.Context) {
 	// 用户不存在返回对应的错误
 	if err != nil {
 		log.Println("controller-UserInfo: 用户登录失败,", err)
-		c.JSON(http.StatusOK, common.UserLoginResponse{
+		c.JSON(http.StatusOK, common.UserSignBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  err.Error(),
 			},
-			UserIdTokenResponse: common.UserIdTokenResponse{},
+			UserIdTokenResp: common.UserIdTokenResp{},
 		})
 		return
 	}
 
 	// 用户存在，返回相应的id和token
 	log.Println("用户", username, "登录成功。")
-	c.JSON(http.StatusOK, common.UserLoginResponse{
+	c.JSON(http.StatusOK, common.UserSignBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "登陆成功"},
-		UserIdTokenResponse: userLoginResponse,
+		UserIdTokenResp: userLoginResponse,
 	})
 }
 
@@ -79,12 +79,12 @@ func UserInfo(c *gin.Context) {
 	// 用户不存在返回对应的错误
 	if err != nil {
 		log.Println("controller-UserInfo: 查找用户信息失败", err)
-		c.JSON(http.StatusOK, common.UserInfoResponse{
+		c.JSON(http.StatusOK, common.UserInfoBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  err.Error(),
 			},
-			UserList: common.UserInfoQueryResponse{},
+			UserInfo: common.UserInfoResp{},
 		})
 		return
 	}
@@ -97,12 +97,12 @@ func UserInfo(c *gin.Context) {
 
 	// 用户存在，返回相应的id和token
 	log.Println("获取用户id", rawId, "的信息成功。")
-	c.JSON(http.StatusOK, common.UserInfoResponse{
+	c.JSON(http.StatusOK, common.UserInfoBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "获取用户信息成功",
 		},
-		UserList: userInfoResponse,
+		UserInfo: userInfoResponse,
 	})
 
 }

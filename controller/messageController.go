@@ -37,7 +37,7 @@ func Message(c *gin.Context) {
 		log.Panicln("controller-Message: 发送消息失败，解析actionType时出错，" + err.Error())
 	}
 
-	message_text := c.Query("content")
+	messageText := c.Query("content")
 
 	if actionType != 1 {
 		c.JSON(http.StatusOK, common.BaseResponse{
@@ -47,7 +47,7 @@ func Message(c *gin.Context) {
 		log.Panicln("controller-Message: 发送消息失败，未知的 actionType: " + actionTypeStr)
 	}
 
-	err = service.SendMessageService(senderID, uint(receiverID), message_text)
+	err = service.SendMessageService(senderID, uint(receiverID), messageText)
 	if err != nil {
 		c.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
@@ -62,7 +62,7 @@ func Message(c *gin.Context) {
 
 }
 
-// 消息记录控制层
+// MessageList 消息记录控制层
 func MessageList(c *gin.Context) {
 	getUserId, _ := c.Get("user_id")
 	var senderID uint
@@ -89,7 +89,7 @@ func MessageList(c *gin.Context) {
 	}
 
 	if len(messageResponseList) == 0 {
-		c.JSON(http.StatusOK, common.MessageListResponse{
+		c.JSON(http.StatusOK, common.MessageListBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 0,
 				StatusMsg:  "获取消息记录成功，消息历史为空",
@@ -99,7 +99,7 @@ func MessageList(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, common.MessageListResponse{
+	c.JSON(http.StatusOK, common.MessageListBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "获取消息记录成功",

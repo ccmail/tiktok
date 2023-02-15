@@ -1,12 +1,14 @@
 package service
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+	"tiktok/pkg/common"
+)
 
 type VideoServiceImpl interface {
-	Publish(data *multipart.FileHeader, title, token string) (string, error)
-	PublishList(userID uint, token string) (string, error)
-	Feed()
-	getHostIDFromToken(string) uint
+	Publish(*multipart.FileHeader, string, string) (string, error)
+	PublishList(uint, string) ([]common.VideoResp, error)
+	Feed(string, string) ([]common.VideoResp, int64, error)
 }
 type VideoService struct {
 }

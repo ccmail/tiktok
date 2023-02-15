@@ -12,8 +12,8 @@ func TestFindMultiUserInfo(t *testing.T) {
 		log.Panicln("链接数据库失败")
 	}
 	//var res []model.User
-	//tesrStr := []string{"1", "2", "3", "4"}
-	//find := DBConn.Model(&model.User{}).Where("id IN ?", tesrStr).Find(&res)
+	//testStr := []string{"1", "2", "3", "4"}
+	//find := DBConn.Model(&model.User{}).Where("id IN ?", testStr).Find(&res)
 	//if find.Error != nil {
 	//	fmt.Println("用字符串查找失败")
 	//}

@@ -85,9 +85,9 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 		return resultList, err
 	}
 
-	hostID := getHostIDFromToken(hostToken)
+	hostID := util.GetHostIDFromToken(hostToken)
 
-	author := packUserInfo(guestInfo, hostID)
+	author := util.PackUserInfo(guestInfo, mapper.CheckFollowing(hostID, guestInfo.ID))
 
 	videoList, err := mapper.FindVideosByUserID(guestInfo.ID)
 	if err != nil {
@@ -97,14 +97,14 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 
 	//需要展示的列表信息
 	for i := 0; i < len(videoList); i++ {
-		resultList = append(resultList, packVideoInfo(videoList[i], author, hostID))
+		resultList = append(resultList, util.PackVideoInfo(videoList[i], author, mapper.IsFavorite(hostID, videoList[i].ID)))
 	}
 	return resultList, nil
 }
 
 func (t *VideoService) Feed(token string, strLastTime string) ([]common.VideoResp, int64, error) {
 
-	hostID := getHostIDFromToken(token)
+	hostID := util.GetHostIDFromToken(token)
 	var nextTime = time.Now()
 	lastTime := time.Now()
 	if strLastTime != "" {
@@ -141,53 +141,11 @@ func (t *VideoService) Feed(token string, strLastTime string) ([]common.VideoRes
 			log.Printf("没有查找到视频id为%v的作者信息, 作者信息应当为%v\n", video.ID, video.AuthorID)
 			continue
 		}
-		userResp := packUserInfo(multiUser[video.AuthorID], hostID)
-		feedVideos = append(feedVideos, packVideoInfo(video, userResp, hostID))
+		userResp := util.PackUserInfo(multiUser[video.AuthorID], mapper.CheckFollowing(hostID, multiUser[video.AuthorID].ID))
+		feedVideos = append(feedVideos, util.PackVideoInfo(video, userResp, mapper.IsFavorite(hostID, video.ID)))
 	}
 	if len(feedVideos) == 0 {
 		return feedVideos, 0, errors.New("没有获取到Feed信息")
 	}
 	return feedVideos, nextTime.Unix(), nil
-}
-
-func packVideoInfo(videos model.Video, author common.UserInfoResp, hostID uint) common.VideoResp {
-	returnVideo := common.VideoResp{
-		Id:            videos.ID,
-		Author:        author,
-		PlayUrl:       videos.PlayUrl,
-		CoverUrl:      videos.CoverUrl,
-		FavoriteCount: videos.FavoriteCount,
-		CommentCount:  videos.CommentCount,
-		IsFavorite:    mapper.IsFavorite(hostID, videos.ID),
-		Title:         videos.Title,
-	}
-	return returnVideo
-}
-
-// 包装user信息, 将其包装为response格式
-func packUserInfo(guestInfo model.User, hostID uint) common.UserInfoResp {
-	author := common.UserInfoResp{
-		AuthorId:      guestInfo.ID,
-		Name:          guestInfo.Name,
-		FollowCount:   guestInfo.FollowCount,
-		FollowerCount: guestInfo.FollowerCount,
-		IsFollow:      mapper.CheckFollowing(hostID, guestInfo.ID),
-	}
-	return author
-}
-
-//从token返回id, 只有不强制需要使用token鉴权的方法才能用!!
-func getHostIDFromToken(hostToken string) uint {
-	var hostID uint
-	if hostToken != "" {
-		hostInfo, err := middleware.ParseTokenCJS(hostToken)
-		if err != nil {
-			//就算token解析失败也不应该拒绝访问publishList
-			log.Println("请求作品列表的用户的token解析失败", err)
-		} else {
-			hostID = hostInfo.UserId
-		}
-	}
-	//log.Println(hostID)
-	return hostID
 }

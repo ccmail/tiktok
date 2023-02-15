@@ -59,7 +59,7 @@ func ExistVideo(vid uint) (video model.Video, flagExist bool) {
 	return video, !errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-// ReduceCommentCount 增加video记录中的评论计数
+// AddCommentCount  增加video记录中的评论计数
 func AddCommentCount(vid uint) error {
 	err := DBConn.Table("videos").Where("id = ?", vid).Update("comment_count", gorm.Expr("comment_count + 1")).Error
 	if err != nil {

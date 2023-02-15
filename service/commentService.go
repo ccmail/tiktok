@@ -5,6 +5,7 @@ import (
 	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/common"
+	"tiktok/util"
 )
 
 // PostCommentService 发布评论
@@ -50,12 +51,12 @@ func DeleteCommentService(commentID uint, videoID uint) error {
 	return nil
 }
 
-func CommentListService(userId uint, videoID uint) (commentRespionseList []common.CommentResponse, err error) {
+func CommentListService(userId uint, videoID uint) (commentResponseList []common.CommentResp, err error) {
 	commentList, err := mapper.GetCommentList(videoID)
 	// log.Println("commentList: ", commentList)
 	if err != nil {
 		log.Println("service-CommentListService: 查表获取评论列表时失败")
-		return []common.CommentResponse{{}}, nil
+		return []common.CommentResp{{}}, nil
 	}
 	for i := 0; i < len(commentList); i++ {
 		getUser, err := mapper.FindUserInfo(commentList[i].UserID)
@@ -64,19 +65,14 @@ func CommentListService(userId uint, videoID uint) (commentRespionseList []commo
 			log.Println("无法找到评论者 ", getUser.ID, "，已略过此条评论 ", commentList[i].ID)
 			continue
 		}
-		responseComment := common.CommentResponse{
+		responseComment := common.CommentResp{
 			ID:         commentList[i].ID,
 			Content:    commentList[i].CommentText,
 			CreateDate: commentList[i].CreatedAt.Format("01-02"), // mm-dd
-			User: common.CommenterInfo{
-				UserID:        getUser.ID,
-				Username:      getUser.Name,
-				FollowCount:   getUser.FollowCount,
-				FollowerCount: getUser.FollowerCount,
-				IsFollow:      mapper.CheckFollowing(userId, commentList[i].ID),
-			},
+			//这里应该是失误, 已更正位查询和userID的关注关系
+			User: util.PackUserInfo(getUser, mapper.CheckFollowing(userId, commentList[i].UserID)),
 		}
-		commentRespionseList = append(commentRespionseList, responseComment)
+		commentResponseList = append(commentResponseList, responseComment)
 	}
-	return commentRespionseList, nil
+	return commentResponseList, nil
 }

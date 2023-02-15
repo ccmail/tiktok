@@ -4,6 +4,7 @@ import (
 	"tiktok/controller"
 	"tiktok/mapper"
 	"tiktok/pkg/middleware"
+	"tiktok/util"
 )
 
 func main() {
@@ -12,7 +13,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	middleware.InitLog()
+	util.InitLog()
 	// 连接OSS服务
 	err = middleware.InitOSS()
 	if err != nil {

@@ -12,18 +12,18 @@ import (
 
 var (
 	DBConn   *gorm.DB
-	dbConfig *DBconfig
+	dbConfig *DBConfig
 	mappers  = []interface{}{&model.Comment{}, &model.Follower{}, &model.Like{}, &model.Message{}, &model.User{}, &model.Video{}}
 )
 
-type DBconfig struct {
-	Host         string `yaml:"Host"`
-	UserName     string `yaml:"Username"`
-	PassWord     string `yaml:"Password"`
-	DBName       string `yaml:"DBname"`
-	Port         string `yaml:"Port"`
-	MaxOpenConns int    `yaml:"MaxOpenConns"`
-	MaxIdleConns int    `yaml:"MaxIdleConns"`
+type DBConfig struct {
+	Host        string `yaml:"Host"`
+	UserName    string `yaml:"Username"`
+	PassWord    string `yaml:"Password"`
+	DBName      string `yaml:"DBName"`
+	Port        string `yaml:"Port"`
+	MaxOpenConn int    `yaml:"MaxOpenConn"`
+	MaxIdleConn int    `yaml:"MaxIdleConn"`
 }
 
 // 从数据库配置文件中获取DSN
@@ -57,8 +57,8 @@ func InitDBConnector() (err error) {
 
 	// 配置连接池
 	sqlDB, _ := DBConn.DB()
-	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConns)
-	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConn)
+	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConn)
 
 	return nil
 }
@@ -93,8 +93,8 @@ func InitDBConnectorSupportTest() (err error) {
 
 	// 配置连接池
 	sqlDB, _ := DBConn.DB()
-	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConns)
-	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConn)
+	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConn)
 
 	return nil
 }

@@ -10,6 +10,7 @@ import (
 	"testing"
 	"tiktok/mapper"
 	"tiktok/pkg/middleware"
+	"tiktok/util"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func TestVideoService_Publish(t *testing.T) {
 	var token string
 	var title string
 	var videoService VideoService
-	middleware.InitLog()
+	util.InitLog()
 	_ = middleware.InitOSS()
 	engine := gin.Default()
 	engine.POST("/douyin/publish/action/", func(context *gin.Context) {
@@ -41,7 +42,6 @@ func TestVideoService_Publish(t *testing.T) {
 func TestVideoService_PublishList(t *testing.T) {
 	_ = mapper.InitDBConnectorSupportTest()
 	var v VideoService
-	//token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImNjdGVzdGluZyIsImV4cCI6MTY3NjI5MTg3NiwiaWF0IjoxNjc2MjA1NDc2LCJpc3MiOiJoZW5yaWsiLCJzdWIiOiJ1c2VyVG9rZW4ifQ.Vs9TMtRQ9qi1SUH0wsrA0Mh2Roewyk3S-0popItoOyA"
 	list, err := v.PublishList(1, "")
 	if err != nil {
 		t.Error("获取失败了")

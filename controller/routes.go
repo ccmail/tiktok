@@ -23,7 +23,6 @@ func InitRouter() *gin.Engine {
 		publishGroup := g.Group("/publish")
 		{
 			publishGroup.POST("/action/", middleware.JwtMiddleware(), Publish)
-			//publishGroup.GET("/list/", middleware.JwtMiddleware(), PublishList)
 			publishGroup.GET("/list/", middleware.JwtMiddleware(), PublishList)
 
 		}
@@ -49,22 +48,7 @@ func InitRouter() *gin.Engine {
 			followGroup.GET("/follow/list/", middleware.JwtMiddleware(), FollowList)
 			followGroup.GET("/follower/list/", middleware.JwtMiddleware(), FollowerList)
 			followGroup.GET("/friend/list/", middleware.JwtMiddleware(), FriendList)
-			//followGroup.GET("/follow/list/", FollowList)
 		}
-		// // comment路由组
-		// commentGroup := g.Group("/comment")
-		// {
-		// 	commentGroup.POST("/action/", middleware.JwtMiddleware(), controller.CommentAction)
-		// 	commentGroup.GET("/list/", middleware.JwtMiddleware(), controller.CommentList)
-		// }
-
-		// // relation路由组
-		// relationGroup := g.Group("relation")
-		// {
-		// 	relationGroup.POST("/action/", middleware.JwtMiddleware(), controller.RelationAction)
-		// 	relationGroup.GET("/follow/list/", middleware.JwtMiddleware(), controller.FollowList)
-		// 	relationGroup.GET("/follower/list/", middleware.JwtMiddleware(), controller.FollowerList)
-		// }
 
 		// message路由组
 		messageGroup := g.Group("/message")

@@ -14,26 +14,26 @@ func ExistLikeRecord(userId uint, videoId uint) (likeRecord model.Like, flagExis
 	return likeRecord, !errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-func CreateLikeRecord(userID uint, videoID uint, islike bool) error {
+func CreateLikeRecord(userID uint, videoID uint, isLike bool) error {
 	likeRecord := model.Like{
 		UserID:  userID,
 		VideoID: videoID,
-		IsLike:  islike,
+		IsLike:  isLike,
 	}
 	err := DBConn.Table("likes").Create(&likeRecord).Error
 	if err != nil { //创建记录
 		return err
 	}
-	if islike {
+	if isLike {
 		//DBConn.Table("videos").Where("id = ?", videoID).Update("like_count", gorm.Expr("like_count + 1"))
 		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 	}
 	return nil
 }
 
-func UpdateLikeRecord(userID uint, videoID uint, islike bool) {
-	DBConn.Table("likes").Where("user_id = ? AND video_id = ?", userID, videoID).Update("is_like", islike)
-	if islike {
+func UpdateLikeRecord(userID uint, videoID uint, isLike bool) {
+	DBConn.Table("likes").Where("user_id = ? AND video_id = ?", userID, videoID).Update("is_like", isLike)
+	if isLike {
 		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count + 1"))
 	} else {
 		DBConn.Table("videos").Where("id = ?", videoID).Update("favorite_count", gorm.Expr("favorite_count - 1"))
@@ -56,39 +56,3 @@ func GetLikeList(userID uint) (videoList []model.Video, err error) {
 	}
 	return videoList, nil
 }
-
-// func AddLikeCount(HostId uint) error {
-// 	if err := DBConn.Model(&model.User{}).
-// 		Where("id=?", HostId).
-// 		Update("favorite_count", gorm.Expr("favorite_count+?", 1)).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func AddTotalLiked(HostId uint) error {
-// 	if err := DBConn.Model(&model.User{}).
-// 		Where("id=?", HostId).
-// 		Update("total_favorited", gorm.Expr("total_favorited+?", 1)).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func ReduceLikeCount(HostId uint) error {
-// 	if err := DBConn.Model(&model.User{}).
-// 		Where("id=?", HostId).
-// 		Update("favorite_count", gorm.Expr("favorite_count-?", 1)).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func ReduceTotalLiked(HostId uint) error {
-// 	if err := DBConn.Model(&model.User{}).
-// 		Where("id=?", HostId).
-// 		Update("total_favorited", gorm.Expr("total_favorited-?", 1)).Error; err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

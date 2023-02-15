@@ -11,7 +11,7 @@ func CreateMessage(message model.Message) error {
 	return nil
 }
 
-// 获取消息列表
+// GetMessageList 获取消息列表
 func GetMessageList(senderID uint, receiverID uint) (messageList []model.Message, err error) {
 	find := DBConn.Table("messages").Where("user_id = ? AND friend_id = ?", senderID, receiverID).Find(&messageList)
 	if find.Error != nil {

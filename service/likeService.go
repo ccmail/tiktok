@@ -6,8 +6,10 @@ import (
 	"tiktok/model"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
+	"tiktok/util"
 )
 
+// LikeService 这里逻辑可能有点问题, actionType形参没有使用
 func LikeService(userID uint, videoID uint, actionType uint) error {
 	// 首先要保证视频存在
 	_, videoExist := mapper.ExistVideo(videoID)
@@ -62,14 +64,14 @@ func CancelLikeService(userID uint, videoID uint) error {
 	// 首先要保证视频存在
 	_, videoExist := mapper.ExistVideo(videoID)
 	if !videoExist {
-		log.Println("service-LikeService: 点赞失败，未找到对应视频")
+		log.Panicln("service-LikeService: 点赞失败，未找到对应视频")
 		return errno.ErrorNullVideo
 	}
 	likeRecord, likeExist := mapper.ExistLikeRecord(userID, videoID)
 	if !likeExist { // 不存在记录
 		err := mapper.CreateLikeRecord(userID, videoID, false)
 		if err != nil {
-			log.Println("service-LikeService: 创建like记录失败，", err)
+			log.Panicln("service-LikeService: 创建like记录失败，", err)
 			return err
 		}
 	} else { // 存在记录
@@ -91,45 +93,42 @@ func LikeListService(userID uint) ([]model.Video, error) {
 	videoList, err := mapper.GetLikeList(userID)
 
 	if err != nil {
-		log.Panicln("service-LikeListServic: 获取喜欢列表失败，", err)
+		log.Panicln("service-LikeListService: 获取喜欢列表失败，", err)
 	}
 
 	return videoList, nil
 }
 
 // FillInfo 为要返回的视频列表填充信息
-func FillInfo(videoList []model.Video, userIdHost uint) []common.FavoriteVideo {
-	returnList := make([]common.FavoriteVideo, 0)
+func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
+	returnList := make([]common.VideoResp, 0)
 	for _, m := range videoList {
-		var author = common.AuthorInfo{}
+		var author = common.UserInfoResp{}
 		var getAuthor = model.User{}
 		getAuthor, err := mapper.FindUserInfo(m.AuthorID)
 		if err != nil {
 			log.Println("未找到作者: ", m.AuthorID)
 			continue
 		}
-		// 是否已关注
-		isfollowing := mapper.CheckFollowing(userIdHost, m.AuthorID)
-		// 是否已点赞
-		isfavorite := mapper.IsFavorite(userIdHost, m.ID)
 
 		// 作者信息
 		author.UserID = getAuthor.ID
 		author.Username = getAuthor.Name
 		author.FollowCount = getAuthor.FollowCount
 		author.FollowerCount = getAuthor.FollowerCount
-		author.IsFollow = isfollowing
+		author.IsFollow = mapper.CheckFollowing(userIdHost, m.AuthorID)
 
-		video := common.FavoriteVideo{
-			ID:            m.ID,
-			Author:        author,
-			PlayUrl:       m.PlayUrl,
-			CoverUrl:      m.CoverUrl,
-			FavoriteCount: m.FavoriteCount,
-			CommentCount:  m.CommentCount,
-			IsFavorite:    isfavorite,
-			Title:         m.Title,
-		}
+		video := util.PackVideoInfo(m, author, mapper.IsFavorite(userIdHost, m.ID))
+		/*		video := common.VideoResp{
+				ID:            m.ID,
+				Author:        author,
+				PlayUrl:       m.PlayUrl,
+				CoverUrl:      m.CoverUrl,
+				FavoriteCount: m.FavoriteCount,
+				CommentCount:  m.CommentCount,
+				IsFavorite:    mapper.IsFavorite(userIdHost, m.ID),
+				Title:         m.Title,
+			}*/
 		returnList = append(returnList, video)
 	}
 	return returnList

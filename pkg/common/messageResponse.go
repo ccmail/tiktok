@@ -1,12 +1,15 @@
 package common
 
-type MessageResponse struct {
-	ID         uint   `json:"id"`
+type MessageResp struct {
+	ID uint `json:"id"`
+	//客户端修改了接口, 详见https://bytedance.feishu.cn/docs/doccnKrCsU5Iac6eftnFBdsXTof
+	ToUserID   uint   `json:"to_user_id"`
+	FromUserID uint   `json:"from_user_id"`
 	Content    string `json:"content"`
 	CreateTime string `json:"create_time"`
 }
 
-type MessageListResponse struct {
+type MessageListBaseResp struct {
 	BaseResponse
-	MessageResponseList []MessageResponse `json:"message_list"`
+	MessageResponseList []MessageResp `json:"message_list"`
 }

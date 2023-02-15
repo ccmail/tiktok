@@ -43,11 +43,11 @@ func Like(c *gin.Context) {
 	} else if actionType == 2 {
 		err := service.CancelLikeService(userId, uint(videoId))
 		if err != nil {
-			log.Panicln("controller-Like: 取消点赞失败，", err)
 			c.JSON(http.StatusBadRequest, common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  err.Error(),
 			})
+			log.Panicln("controller-Like: 取消点赞失败，", err)
 			return
 		}
 		log.Println("取消点赞成功")
@@ -83,7 +83,7 @@ func LikeList(c *gin.Context) {
 	// log.Println("returnList:", returnList)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, common.LikeListResponse{
+		c.JSON(http.StatusBadRequest, common.VideoListBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 1,
 				StatusMsg:  "获取喜欢列表失败",
@@ -94,14 +94,14 @@ func LikeList(c *gin.Context) {
 		return
 	} else {
 		if len(returnList) == 0 {
-			c.JSON(http.StatusOK, common.LikeListResponse{
+			c.JSON(http.StatusOK, common.VideoListBaseResp{
 				BaseResponse: common.BaseResponse{
 					StatusCode: 0,
 					StatusMsg:  "该用户未点赞任何视频",
 				},
 			})
 		}
-		c.JSON(http.StatusOK, common.LikeListResponse{
+		c.JSON(http.StatusOK, common.VideoListBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 0,
 				StatusMsg:  "获取喜欢列表成功",

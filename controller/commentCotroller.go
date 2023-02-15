@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CommentAction 评论操作控制层
+// Comment  评论操作控制层
 func Comment(c *gin.Context) {
 	//1 数据处理
 	UserId, _ := c.Get("user_id")
@@ -40,16 +40,16 @@ func Comment(c *gin.Context) {
 			log.Panicln("controller-Comment: 发表评论失败，")
 		}
 
-		c.JSON(http.StatusOK, common.CommentActionResponse{
+		c.JSON(http.StatusOK, common.CommentActionBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 0,
 				StatusMsg:  "发表评论成功",
 			},
-			Comment: common.CommentResponse{
+			Comment: common.CommentResp{
 				ID:         newComment.ID,
 				Content:    newComment.CommentText,
 				CreateDate: newComment.CreatedAt.Format("01-02"),
-				User: common.CommenterInfo{
+				User: common.UserInfoResp{
 					UserID:        commenter.ID,
 					Username:      commenter.Name,
 					FollowCount:   commenter.FollowCount,
@@ -63,7 +63,7 @@ func Comment(c *gin.Context) {
 	} else if actionType == "2" { //删除评论
 		commentIdStr := c.Query("comment_id")
 		commentId, _ := strconv.ParseInt(commentIdStr, 10, 64)
-		err := service.DeleteCommentService(uint(videoId), uint(commentId))
+		err := service.DeleteCommentService(uint(commentId), uint(videoId))
 
 		if err != nil {
 			c.JSON(http.StatusOK, common.BaseResponse{
@@ -122,9 +122,9 @@ func CommentList(c *gin.Context) {
 
 	// log.Println("userID: ", userID, ", videoID: ", videoID)
 
-	commentRespionseList, err := service.CommentListService(userID, uint(videoID))
+	commentResponseList, err := service.CommentListService(userID, uint(videoID))
 
-	// log.Println("commentRespionseList: ", commentRespionseList)
+	// log.Println("commentResponseList: ", commentResponseList)
 
 	if err != nil {
 		c.JSON(http.StatusOK, common.BaseResponse{
@@ -137,22 +137,22 @@ func CommentList(c *gin.Context) {
 	}
 
 	//响应返回
-	if len(commentRespionseList) == 0 {
-		c.JSON(http.StatusOK, common.CommentListResponse{
+	if len(commentResponseList) == 0 {
+		c.JSON(http.StatusOK, common.CommentListBaseResp{
 			BaseResponse: common.BaseResponse{
 				StatusCode: 0,
 				StatusMsg:  "该视频的评论列表为空",
 			},
-			CommentList: commentRespionseList,
+			CommentList: commentResponseList,
 		})
 		return
 	}
-	c.JSON(http.StatusOK, common.CommentListResponse{
+	c.JSON(http.StatusOK, common.CommentListBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "获取评论列表成功",
 		},
-		CommentList: commentRespionseList,
+		CommentList: commentResponseList,
 	})
 
 }

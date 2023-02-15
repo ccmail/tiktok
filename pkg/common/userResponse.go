@@ -1,42 +1,30 @@
 package common
 
-// UserIdTokenResponse user related responses
-type UserIdTokenResponse struct {
+// UserIdTokenResp user related responses
+type UserIdTokenResp struct {
 	UserId uint   `json:"user_id"`
 	Token  string `json:"token"`
 }
 
-type UserRegisterResponse struct {
+type UserSignBaseResp struct {
 	BaseResponse
-	UserIdTokenResponse
+	UserIdTokenResp
 }
 
-type UserLoginResponse struct {
-	BaseResponse
-	UserIdTokenResponse
-}
-
-type UserInfoQueryResponse struct {
+type UserInfoResp struct {
 	UserID        uint   `json:"id"`
 	Username      string `json:"name"`
 	FollowCount   uint   `json:"follow_count"`
 	FollowerCount uint   `json:"follower_count"`
 	IsFollow      bool   `json:"is_follow"`
 }
-type UserInfoResponse struct {
+
+type UserInfoBaseResp struct {
 	BaseResponse
-	UserList UserInfoQueryResponse `json:"user"`
+	UserInfo UserInfoResp `json:"user"`
 }
 
-type UserInfoListResp struct {
+type UserInfoListBaseResp struct {
 	BaseResponse
 	UserList []UserInfoResp `json:"user_list"`
-}
-
-type UserInfoResp struct {
-	AuthorId      uint   `json:"id"`
-	Name          string `json:"name"`
-	FollowCount   uint   `json:"follow_count"`
-	FollowerCount uint   `json:"follower_count"`
-	IsFollow      bool   `json:"is_follow"`
 }

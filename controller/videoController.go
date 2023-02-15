@@ -88,10 +88,9 @@ func PublishList(ctx *gin.Context) {
 			StatusCode: 1,
 			StatusMsg:  "获取发布作品详情时失败",
 		})
-		//log.Panicln("获取发布作品详情时失败", videoList, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, common.VideoListResponse{
+	ctx.JSON(http.StatusOK, common.VideoListBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "请求发布列表成功!",
@@ -115,7 +114,7 @@ func Feed(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, common.FeedVideoListResp{
+	ctx.JSON(http.StatusOK, common.FeedVideoListBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "获取Feed流成功",
