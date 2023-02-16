@@ -35,7 +35,8 @@ func GetMessageListService(senderID uint, receiverID uint) (messageResponseList 
 			Content:    m.MessageText,
 			FromUserID: m.UserID,
 			ToUserID:   m.FriendID,
-			CreateTime: m.CreatedAt.Format("2006-01-02 15:03:04"),
+			//CreateTime: m.CreatedAt.Format("2006-01-02 15:03:04"),
+			CreateTime: m.CreatedAt.Unix(),
 		}
 		messageResponseList = append(messageResponseList, messageResponse)
 	}
