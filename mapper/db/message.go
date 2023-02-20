@@ -17,7 +17,10 @@ func CreateMessage(message model.Message) error {
 
 // GetMessageList 获取消息列表
 func GetMessageList(senderID uint, receiverID uint, prevTime time.Time) (messageList []model.Message, err error) {
-	find := mapper.DBConn.Table("messages").Where("user_id = ? AND friend_id = ? AND created_at > ? ", senderID, receiverID, prevTime).Find(&messageList)
+	find := mapper.DBConn.Table("messages").
+		Where("user_id = ? AND friend_id = ? OR user_id = ? AND friend_id = ? ", senderID, receiverID, receiverID, senderID).
+		Where("created_at > ?", prevTime).
+		Find(&messageList)
 	if find.Error != nil {
 		return []model.Message{}, find.Error
 	}

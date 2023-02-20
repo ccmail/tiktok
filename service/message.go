@@ -36,6 +36,7 @@ func GetMessageList(senderID uint, receiverID uint, strPrevTime string) (message
 		}
 	}
 	messageList, err := db.GetMessageList(senderID, receiverID, prevTime)
+	log.Println("打印时间", prevTime)
 	if err != nil {
 		log.Println("service-SendMessage: 获取消息列表失败，", err.Error())
 		return []common.MessageResp{}, err
