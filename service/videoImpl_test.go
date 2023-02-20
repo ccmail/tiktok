@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"path/filepath"
 	"testing"
-	"tiktok/mapper"
+	"tiktok/config"
 	"tiktok/pkg/middleware"
-	"tiktok/pkg/util"
 	"time"
 )
 
@@ -19,7 +18,7 @@ func TestVideoService_Publish(t *testing.T) {
 	var token string
 	var title string
 	var videoService VideoService
-	util.InitLog()
+	config.InitLog()
 	_ = middleware.InitOSS()
 	engine := gin.Default()
 	engine.POST("/douyin/publish/action/", func(context *gin.Context) {
@@ -40,7 +39,7 @@ func TestVideoService_Publish(t *testing.T) {
 
 }
 func TestVideoService_PublishList(t *testing.T) {
-	_ = mapper.InitDBConnectorSupportTest()
+	_ = config.InitDBConnectorSupportTest()
 	var v VideoService
 	list, err := v.PublishList(1, "")
 	if err != nil {
@@ -53,7 +52,7 @@ func TestVideoService_PublishList(t *testing.T) {
 }
 
 func TestVideoService_Feed(t *testing.T) {
-	_ = mapper.InitDBConnectorSupportTest()
+	_ = config.InitDBConnectorSupportTest()
 	var v VideoService
 	feed, nextTime, err := v.Feed("", "")
 	if err != nil {

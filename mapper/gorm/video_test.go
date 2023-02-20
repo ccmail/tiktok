@@ -1,12 +1,13 @@
-package mapper
+package gorm
 
 import (
 	"fmt"
 	"testing"
+	"tiktok/config"
 )
 
 func TestGetVideoInfo(t *testing.T) {
-	InitDBConnectorSupportTest()
+	config.InitDBConnectorSupportTest()
 	w, err := GetVideoInfo(VideoIDList(1))
 	if err != nil {
 		t.Error()

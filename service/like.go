@@ -2,7 +2,7 @@ package service
 
 import (
 	"log"
-	"tiktok/mapper"
+	"tiktok/mapper/gorm"
 	"tiktok/model"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
@@ -12,15 +12,15 @@ import (
 // LikeService 这里逻辑可能有点问题, actionType形参没有使用
 func LikeService(userID uint, videoID uint, actionType uint) error {
 	// 首先要保证视频存在
-	_, videoExist := mapper.ExistVideo(videoID)
+	_, videoExist := gorm.ExistVideo(videoID)
 	if !videoExist {
 		log.Println("service-LikeService: 点赞失败，未找到对应视频")
 		return errno.ErrorNullVideo
 	}
 	//如果没有记录-Create，如果有了记录-修改IsLike
-	likeRecord, likeExist := mapper.ExistLikeRecord(userID, videoID)
+	likeRecord, likeExist := gorm.ExistLikeRecord(userID, videoID)
 	if !likeExist { // 不存在记录
-		err := mapper.CreateLikeRecord(userID, videoID, true)
+		err := gorm.CreateLikeRecord(userID, videoID, true)
 		if err != nil {
 			log.Println("service-LikeService: 创建like记录失败，", err)
 			return err
@@ -39,7 +39,7 @@ func LikeService(userID uint, videoID uint, actionType uint) error {
 		// }
 	} else { // 存在记录
 		if !likeRecord.IsLike { //IsLike为false，则video的like_count加1
-			mapper.UpdateLikeRecord(userID, videoID, true)
+			gorm.UpdateLikeRecord(userID, videoID, true)
 			// //userId的like_count增加
 			// if err := mapper.AddLikeCount(userID); err != nil {
 			// 	return err
@@ -62,21 +62,21 @@ func LikeService(userID uint, videoID uint, actionType uint) error {
 
 func CancelLikeService(userID uint, videoID uint) error {
 	// 首先要保证视频存在
-	_, videoExist := mapper.ExistVideo(videoID)
+	_, videoExist := gorm.ExistVideo(videoID)
 	if !videoExist {
 		log.Panicln("service-LikeService: 点赞失败，未找到对应视频")
 		return errno.ErrorNullVideo
 	}
-	likeRecord, likeExist := mapper.ExistLikeRecord(userID, videoID)
+	likeRecord, likeExist := gorm.ExistLikeRecord(userID, videoID)
 	if !likeExist { // 不存在记录
-		err := mapper.CreateLikeRecord(userID, videoID, false)
+		err := gorm.CreateLikeRecord(userID, videoID, false)
 		if err != nil {
 			log.Panicln("service-LikeService: 创建like记录失败，", err)
 			return err
 		}
 	} else { // 存在记录
 		if likeRecord.IsLike { //IsLike为ture，则video的like_count减1
-			mapper.UpdateLikeRecord(userID, videoID, false)
+			gorm.UpdateLikeRecord(userID, videoID, false)
 
 		}
 		//IsLike为false-video的like_count不变
@@ -90,7 +90,7 @@ func LikeListService(userID uint) ([]model.Video, error) {
 
 	//查询当前id用户的所有点赞视频
 
-	videoList, err := mapper.GetLikeList(userID)
+	videoList, err := gorm.GetLikeList(userID)
 
 	if err != nil {
 		log.Panicln("service-LikeListService: 获取喜欢列表失败，", err)
@@ -105,7 +105,7 @@ func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
 	for _, m := range videoList {
 		var author = common.UserInfoResp{}
 		var getAuthor = model.User{}
-		getAuthor, err := mapper.FindUserInfo(m.AuthorID)
+		getAuthor, err := gorm.FindUserInfo(m.AuthorID)
 		if err != nil {
 			log.Println("未找到作者: ", m.AuthorID)
 			continue
@@ -116,9 +116,9 @@ func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
 		author.Username = getAuthor.Name
 		author.FollowCount = getAuthor.FollowCount
 		author.FollowerCount = getAuthor.FollowerCount
-		author.IsFollow = mapper.CheckFollowing(userIdHost, m.AuthorID)
+		author.IsFollow = gorm.CheckFollowing(userIdHost, m.AuthorID)
 
-		video := util.PackVideoInfo(m, author, mapper.IsFavorite(userIdHost, m.ID))
+		video := util.PackVideoInfo(m, author, gorm.IsFavorite(userIdHost, m.ID))
 		/*		video := common.VideoResp{
 				ID:            m.ID,
 				Author:        author,

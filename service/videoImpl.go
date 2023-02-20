@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"tiktok/config"
-	"tiktok/mapper"
+	gorm2 "tiktok/mapper/gorm"
+	"tiktok/mapper/redis"
 	"tiktok/model"
 	"tiktok/pkg/common"
 	"tiktok/pkg/middleware"
@@ -68,7 +69,7 @@ func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) 
 		Title:    title,
 	}
 	//service层调用dao(mapper)层
-	err = mapper.CreateVideo(&video)
+	err = gorm2.CreateVideo(&video)
 	if err != nil {
 		log.Panicln("视频信息插入数据库失败", err)
 		return "", err
@@ -81,7 +82,7 @@ func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) 
 // 目前按照点开其他用户的发布列表也是使用这个方法
 // 等Feed完成之后需要测试
 func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList []common.VideoResp, err error) {
-	guestInfo, err := mapper.FindUserInfo(guestID)
+	guestInfo, err := gorm2.FindUserInfo(guestID)
 	if err != nil {
 		log.Panicln("查找用户信息失败, 没有找到该用户的相关信息", err)
 		return resultList, err
@@ -89,9 +90,9 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 
 	hostID := util2.GetHostIDFromToken(hostToken)
 
-	author := util2.PackUserInfo(guestInfo, mapper.CheckFollowing(hostID, guestInfo.ID))
+	author := util2.PackUserInfo(guestInfo, gorm2.CheckFollowing(hostID, guestInfo.ID))
 
-	videoList, err := mapper.FindVideosByUserID(guestInfo.ID)
+	videoList, err := gorm2.FindVideosByUserID(guestInfo.ID)
 	if err != nil {
 		log.Panicln("获取视频列表失败", err)
 		return resultList, err
@@ -99,7 +100,7 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 
 	//需要展示的列表信息
 	for i := 0; i < len(videoList); i++ {
-		resultList = append(resultList, util2.PackVideoInfo(videoList[i], author, mapper.IsFavorite(hostID, videoList[i].ID)))
+		resultList = append(resultList, util2.PackVideoInfo(videoList[i], author, gorm2.IsFavorite(hostID, videoList[i].ID)))
 	}
 	return resultList, nil
 }
@@ -118,32 +119,32 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 		}
 	}
 	//查出来之后需要查询用户的点赞信息以及用户和人家的关注信息
-	videoInfos := mapper.GetFeedCache(lastTime)
+	videoInfos := redis.GetFeedCache(lastTime)
 
 	//缓存中的feed数量不够, 查mysql
 	if len(videoInfos) < config.MaxFeedVideoCount {
-		videoInfos, err = mapper.FindVideosByLastTime(lastTime)
+		videoInfos, err = gorm2.FindVideosByLastTime(lastTime)
 		if err != nil {
 			log.Panicln("根据时间向Mysql请求视频时失败", err)
 			return vResp, nTime, err
 		}
 		//	这里还需要将videos写入cache, 直接全部写入, 以达到将存在值的cache存活时间更新
-		mapper.SetMultiFeedCache(&videoInfos)
+		redis.SetMultiFeedCache(&videoInfos)
 	}
 	if len(videoInfos) == 0 {
 		return vResp, lastTime.Unix(), errors.New("没有更多视频, 等会试试吧")
 	}
 
 	//查缓存, 点赞信息的缓存
-	isFavorite, likeNoCache := mapper.CheckMultiFavoriteCache(hostID, &videoInfos)
+	isFavorite, likeNoCache := redis.CheckMultiFavoriteCache(hostID, &videoInfos)
 	if len(likeNoCache) > 0 {
 		//	有几个没查到缓存, 需要查数据库
-		err := mapper.CheckLikesNoHit(hostID, &isFavorite, &likeNoCache)
+		err := gorm2.CheckLikesNoHit(hostID, &isFavorite, &likeNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在对应的点赞关系, 不用管了, 直接当作不存在点赞信息")
 		}
 		//每次查都需要更新信息在cache中的存活时间, 查到之后要写到cache中
-		mapper.SetMultiFavoriteCache(hostID, &videoInfos, &isFavorite)
+		redis.SetMultiFavoriteCache(hostID, &videoInfos, &isFavorite)
 	}
 
 	//设置up的id数组
@@ -153,25 +154,25 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 	}
 
 	//关注信息查缓存
-	isFollow, followNoCache := mapper.CheckMultiFollowingCache(hostID, &guestIDs)
+	isFollow, followNoCache := redis.CheckMultiFollowingCache(hostID, &guestIDs)
 	if len(followNoCache) > 0 {
-		err := mapper.CheckMultiFollowNoHit(hostID, &isFollow, &followNoCache)
+		err := gorm2.CheckMultiFollowNoHit(hostID, &isFollow, &followNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在对应的关注关系, 不用管了, 直接当作不存在关注信息")
 		}
 		//	之后将查到的关注信息写入到redis中
-		mapper.SetMultiFollowingCache(hostID, &guestIDs, &isFollow)
+		redis.SetMultiFollowingCache(hostID, &guestIDs, &isFollow)
 	}
 
 	//作者信息查缓存
-	userInfo, userNoCache := mapper.GetMultiUserCache(guestIDs)
+	userInfo, userNoCache := redis.GetMultiUserCache(guestIDs)
 	if len(userNoCache) > 0 {
-		err := mapper.GetMultiUserInfoNoHit(&userInfo, &userNoCache)
+		err := gorm2.GetMultiUserInfoNoHit(&userInfo, &userNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在这个user 可能出错了")
 		}
 		//	之后将查到的信息写入到redis中
-		mapper.SetMultiUserCache(&userInfo)
+		redis.SetMultiUserCache(&userInfo)
 	}
 
 	//按倒叙传入的视频, 最后的时间最前

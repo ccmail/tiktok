@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
-	"tiktok/mapper"
+	"tiktok/mapper/gorm"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
 	"tiktok/pkg/middleware"
@@ -30,7 +30,7 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 	}
 
 	//2.新建用户
-	newUser, err := mapper.CreateUser(username, password)
+	newUser, err := gorm.CreateUser(username, password)
 	if err != nil {
 		return userResponse, err
 	}
@@ -60,7 +60,7 @@ func UserInfoService(rawId string) (common.UserInfoResp, error) {
 	}
 
 	// 获取用户信息
-	user, err := mapper.FindUserInfo(uint(userId))
+	user, err := gorm.FindUserInfo(uint(userId))
 	if err != nil {
 		return userInfoQueryResponse, err
 	}
@@ -84,7 +84,7 @@ func UserLoginService(username string, password string) (common.UserIdTokenResp,
 	}
 
 	// 检查用户是否存在
-	user, flagExist := mapper.ExistUsername(username)
+	user, flagExist := gorm.ExistUsername(username)
 	if !flagExist {
 		log.Println("Service-UserLoginService: 登录失败: 用户 ", username, " 不存在.")
 		return userResponse, errno.ErrorFullPossibility
@@ -128,7 +128,7 @@ func IsFollow(targetId string, userid uint) bool {
 		return false
 	}
 	// 自己是否关注目标userId
-	return mapper.CheckFollowing(uint(hostId), userid)
+	return gorm.CheckFollowing(uint(hostId), userid)
 }
 
 // checkPassword 核对密码

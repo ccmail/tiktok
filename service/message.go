@@ -2,7 +2,7 @@ package service
 
 import (
 	"log"
-	"tiktok/mapper"
+	"tiktok/mapper/gorm"
 	"tiktok/model"
 	"tiktok/pkg/common"
 )
@@ -14,7 +14,7 @@ func SendMessageService(senderID uint, receiverID uint, messageText string) erro
 		FriendID:    receiverID,
 		MessageText: messageText,
 	}
-	err := mapper.CreateMessage(message)
+	err := gorm.CreateMessage(message)
 	if err != nil {
 		log.Println("service-SendMessageService: 发送消息失败，", err.Error())
 		return err
@@ -23,7 +23,7 @@ func SendMessageService(senderID uint, receiverID uint, messageText string) erro
 }
 
 func GetMessageListService(senderID uint, receiverID uint) (messageResponseList []common.MessageResp, err error) {
-	messageList, err := mapper.GetMessageList(senderID, receiverID)
+	messageList, err := gorm.GetMessageList(senderID, receiverID)
 	if err != nil {
 		log.Println("service-SendMessageService: 获取消息列表失败，", err.Error())
 		return []common.MessageResp{}, err

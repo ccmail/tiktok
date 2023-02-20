@@ -1,4 +1,4 @@
-package mapper
+package redis
 
 import (
 	"github.com/redis/go-redis/v9"
@@ -13,7 +13,7 @@ func CheckFollowingCache(hostID, guestID uint) (ans bool, ok bool) {
 		return false, true
 	}
 	k := util.SpliceKey(constants.Follow, hostID, guestID)
-	result, err := RedisConn.Get(RCtx, k).Result()
+	result, err := config.RedisConn.Get(RCtx, k).Result()
 	if err != nil {
 		log.Printf("缓存中不存在%v和%v关注关系\n", hostID, guestID)
 		return false, false
@@ -35,7 +35,7 @@ func CheckMultiFollowingCache(hostID uint, guestIDs *[]uint) (ans []bool, bad ma
 		key[i] = util.SpliceKey(constants.Follow, hostID, (*guestIDs)[i])
 	}
 
-	result, err := RedisConn.MGet(RCtx, key...).Result()
+	result, err := config.RedisConn.MGet(RCtx, key...).Result()
 	if err != nil {
 		log.Println("cache查询关注关系时出错")
 		return ans, bad
@@ -61,7 +61,7 @@ func SetFollowingCache(hostID, guestID uint, isConcern bool) {
 	if !isConcern {
 		val = constants.RedisFalse
 	}
-	err := RedisConn.Set(RCtx, k, val, config.RedisTimeout).Err()
+	err := config.RedisConn.Set(RCtx, k, val, config.RedisTimeout).Err()
 	if err != nil {
 		log.Println("插入缓存时失败")
 	}

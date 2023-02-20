@@ -1,4 +1,4 @@
-package mapper
+package gorm
 
 import (
 	"errors"
@@ -15,13 +15,13 @@ type Option func(db *gorm.DB)
 func GetVideoInfo(opts ...Option) (v []*model.Video, err error) {
 	//优先去查redis
 	for i := range opts {
-		opts[i](DBConn)
+		opts[i](config.DBConn)
 	}
-	if err = DBConn.Error; err != nil {
+	if err = config.DBConn.Error; err != nil {
 		log.Panicln("查询失败")
 		return v, err
 	}
-	DBConn.Find(&v)
+	config.DBConn.Find(&v)
 	return v, nil
 }
 
@@ -38,7 +38,7 @@ func IsFavorite(uid uint, vid uint) bool {
 		return false
 	}
 	var total int64
-	err := DBConn.Table("likes").Where("user_id = ? AND video_id = ? AND is_like = ?", uid, vid, true).Count(&total).Error
+	err := config.DBConn.Table("likes").Where("user_id = ? AND video_id = ? AND is_like = ?", uid, vid, true).Count(&total).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return false
 	}
@@ -50,7 +50,7 @@ func IsFavorite(uid uint, vid uint) bool {
 
 // CreateVideo 添加一条视频信息
 func CreateVideo(video *model.Video) error {
-	create := DBConn.Table("videos").Create(&video)
+	create := config.DBConn.Table("videos").Create(&video)
 	if create.Error != nil {
 		//log.Println("视频信息插入数据库失败", create.Error)
 		return create.Error
@@ -65,7 +65,7 @@ func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
 	//if len(resultVideos) <= 0 {
 	//	log.Println("cache中没有该用户的相关视频")
 	//}
-	find := DBConn.Table("videos").Where("author_id=?", userId).Find(&resultVideos)
+	find := config.DBConn.Table("videos").Where("author_id=?", userId).Find(&resultVideos)
 	if find.Error != nil {
 		err = find.Error
 	}
@@ -75,7 +75,7 @@ func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
 // FindVideosByLastTime 这里需要为所有的视频设置一个list, list长度为30
 func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err error) {
 
-	find := DBConn.Table("videos").Where("created_at < ?", lastTime).Order("created_at desc").Limit(config.MaxFeedVideoCount).Find(&resultVideos)
+	find := config.DBConn.Table("videos").Where("created_at < ?", lastTime).Order("created_at desc").Limit(config.MaxFeedVideoCount).Find(&resultVideos)
 	if find.Error != nil {
 		err = find.Error
 	}
@@ -84,13 +84,13 @@ func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err e
 
 // ExistVideo 检查videos表中是否存在vid对应的视频
 func ExistVideo(vid uint) (video model.Video, flagExist bool) {
-	err := DBConn.Table("videos").Where("ID = ?", vid).First(&video).Error
+	err := config.DBConn.Table("videos").Where("ID = ?", vid).First(&video).Error
 	return video, !errors.Is(err, gorm.ErrRecordNotFound)
 }
 
 // AddCommentCount  增加video记录中的评论计数
 func AddCommentCount(vid uint) error {
-	err := DBConn.Table("videos").Where("id = ?", vid).Update("comment_count", gorm.Expr("comment_count + 1")).Error
+	err := config.DBConn.Table("videos").Where("id = ?", vid).Update("comment_count", gorm.Expr("comment_count + 1")).Error
 	if err != nil {
 		log.Panicln("mapper-AddCommentCount: 增加视频的评论数量失败")
 		return err
@@ -101,7 +101,7 @@ func AddCommentCount(vid uint) error {
 // ReduceCommentCount 减少video记录中的评论计数
 func ReduceCommentCount(videoId uint) error {
 
-	err := DBConn.Table("videos").Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1")).Error
+	err := config.DBConn.Table("videos").Where("id = ?", videoId).Update("comment_count", gorm.Expr("comment_count - 1")).Error
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func ReduceCommentCount(videoId uint) error {
 
 func GetVideoAuthor(videoId uint) (uint, error) {
 	var video model.Video
-	err := DBConn.Table("videos").Where("id = ?", videoId).Find(&video).Error
+	err := config.DBConn.Table("videos").Where("id = ?", videoId).Find(&video).Error
 	if err != nil {
 		return video.ID, err
 	}

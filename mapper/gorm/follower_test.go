@@ -1,12 +1,13 @@
-package mapper
+package gorm
 
 import (
 	"log"
 	"testing"
+	"tiktok/config"
 )
 
 func TestExistFollowRecord(t *testing.T) {
-	_ = InitDBConnectorSupportTest()
+	_ = config.InitDBConnectorSupportTest()
 
 	_, exist := ExistFollowRecord(1, 2)
 	if !exist {
@@ -14,7 +15,7 @@ func TestExistFollowRecord(t *testing.T) {
 	}
 }
 func TestFindMultiConcern(t *testing.T) {
-	_ = InitDBConnectorSupportTest()
+	_ = config.InitDBConnectorSupportTest()
 	list, err := FindMultiConcern(1)
 	if err != nil {
 		t.Error()

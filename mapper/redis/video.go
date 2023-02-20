@@ -1,4 +1,4 @@
-package mapper
+package redis
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type RedisOption func(rdb *redis.Client)
 
 func GetVideoCache(key ...any) (v []model.Video) {
 	k := util.SpliceKey(constants.Videos, key)
-	result, err := RedisConn.Get(RCtx, k).Result()
+	result, err := config.RedisConn.Get(RCtx, k).Result()
 	if err == redis.Nil {
 		log.Println("redis中不存在", k)
 		return v
@@ -41,7 +41,7 @@ func SetVideoCache(videos model.Video, key ...any) {
 	if err != nil {
 		log.Println("序列化存入redis时出错")
 	}
-	err = RedisConn.Set(RCtx, k, marshal, config.RedisTimeout).Err()
+	err = config.RedisConn.Set(RCtx, k, marshal, config.RedisTimeout).Err()
 	if err != nil {
 		log.Println("存入redis时出错")
 	}
@@ -62,7 +62,7 @@ func AddFeedCache(video model.Video) {
 		return
 	}
 	k := util.SpliceKey(constants.Feed)
-	add := RedisConn.ZAdd(RCtx, k, redis.Z{
+	add := config.RedisConn.ZAdd(RCtx, k, redis.Z{
 		Score:  feedScore(video.CreatedAt, video.ID),
 		Member: marshal,
 	})
@@ -81,13 +81,13 @@ func GetFeedCache(latestTime time.Time) (ans []model.Video) {
 	}
 	//获取latestTime这个时间段内的视频
 	k := util.SpliceKey(constants.Feed)
-	result, err := RedisConn.ZRangeByScore(RCtx, k, &op).Result()
+	result, err := config.RedisConn.ZRangeByScore(RCtx, k, &op).Result()
 	if err != nil {
 		log.Println("在cache查询feed流出错")
 		return ans
 	}
 	//查询之后, 根据该latestTime删除一些成员, 设置策略为latestTime的前多少小时过期
-	RedisConn.ZRemRangeByScore(RCtx, k,
+	config.RedisConn.ZRemRangeByScore(RCtx, k,
 		strconv.Itoa(-1),
 		strconv.FormatFloat(
 			float64(

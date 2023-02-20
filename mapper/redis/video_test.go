@@ -1,13 +1,14 @@
-package mapper
+package redis
 
 import (
 	"fmt"
 	"testing"
+	"tiktok/config"
 	"time"
 )
 
 func TestSetInfoForRedis(t *testing.T) {
-	InitDBConnectorSupportTest()
-	InitRedisConnector()
+	config.InitDBConnectorSupportTest()
+	config.InitRedisConnector()
 	fmt.Println(time.Now().Unix())
 }

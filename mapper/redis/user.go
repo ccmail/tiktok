@@ -1,4 +1,4 @@
-package mapper
+package redis
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ func GetMultiUserCache(guestID []uint) (ans []model.User, failedUID map[uint][]i
 	for i := range key {
 		key[i] = util.SpliceKey(constants.User, guestID[i])
 	}
-	result, err := RedisConn.MGet(RCtx, key...).Result()
+	result, err := config.RedisConn.MGet(RCtx, key...).Result()
 	if err != nil {
 		log.Println("cache查询用户信息时失败")
 		return ans, failedUID
@@ -56,7 +56,7 @@ func SetUserCache(user *model.User) {
 	if err != nil {
 		log.Println("用户信息序列化时失败, 失败原因为: ", err)
 	}
-	err = RedisConn.Set(RCtx, key, marshal, config.RedisTimeout).Err()
+	err = config.RedisConn.Set(RCtx, key, marshal, config.RedisTimeout).Err()
 	if err != nil {
 		log.Printf("用户%v写入缓存失败!失败原因为: %v\n", user.ID, err)
 	}

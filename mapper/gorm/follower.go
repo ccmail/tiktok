@@ -1,8 +1,9 @@
-package mapper
+package gorm
 
 import (
 	"errors"
 	"log"
+	"tiktok/config"
 	"tiktok/model"
 
 	"gorm.io/gorm"
@@ -16,7 +17,7 @@ func CheckFollowing(hostID uint, guestID uint) bool {
 	}
 	var relationExist = &model.Follower{}
 	//判断关注是否存在
-	err := DBConn.Model(&model.Follower{}).Where("follower_id=? AND user_id=? AND is_follow=?", hostID, guestID, true).First(&relationExist).Error
+	err := config.DBConn.Model(&model.Follower{}).Where("follower_id=? AND user_id=? AND is_follow=?", hostID, guestID, true).First(&relationExist).Error
 
 	// false-关注不存在，true-关注存在
 	return !errors.Is(err, gorm.ErrRecordNotFound)
@@ -25,7 +26,7 @@ func CheckFollowing(hostID uint, guestID uint) bool {
 // ExistFollowRecord
 // 是host去关注guest, 这里host是粉丝, guestID是up
 func ExistFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist bool) {
-	find := DBConn.Model(&model.Follower{}).Where("user_id = ? AND follower_id = ?", guestID, hostID).Limit(1).Find(&followRecord)
+	find := config.DBConn.Model(&model.Follower{}).Where("user_id = ? AND follower_id = ?", guestID, hostID).Limit(1).Find(&followRecord)
 	if find.Error != nil {
 		log.Panicln("查找失败")
 		return followRecord, false
@@ -42,7 +43,7 @@ func ExistFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist
 func CreatFollowRecord(hostID, guestID uint, isConcern bool) error {
 	followRecord := model.Follower{IsFollow: isConcern, FollowerID: hostID, UserID: guestID}
 	//正在关注, 执行+1
-	tx := DBConn.Model(&model.Follower{}).Create(&followRecord)
+	tx := config.DBConn.Model(&model.Follower{}).Create(&followRecord)
 	if tx.Error != nil {
 		log.Panicln("插入关注信息时出错")
 		return tx.Error
@@ -52,7 +53,7 @@ func CreatFollowRecord(hostID, guestID uint, isConcern bool) error {
 
 // UpdateFollowRecord 是host去关注guest, 这里host是follower
 func UpdateFollowRecord(hostID, guestID uint, isConcern bool) error {
-	tx := DBConn.Model(&model.Follower{}).Where("user_id = ? AND follower_id = ?", guestID, hostID).Update("IsFollow", isConcern)
+	tx := config.DBConn.Model(&model.Follower{}).Where("user_id = ? AND follower_id = ?", guestID, hostID).Update("IsFollow", isConcern)
 	if tx.Error != nil {
 		log.Panicln("更新关注信息时出错")
 		return tx.Error
@@ -62,7 +63,7 @@ func UpdateFollowRecord(hostID, guestID uint, isConcern bool) error {
 
 // FindMultiConcern 返回关注id关注的人, 实现逻辑是将id作为粉丝id进行查询
 func FindMultiConcern(id uint) (resUserIDList []uint, err error) {
-	tx := DBConn.Model(&model.Follower{}).Select("user_id").Where("follower_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
+	tx := config.DBConn.Model(&model.Follower{}).Select("user_id").Where("follower_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
 	if tx.Error != nil {
 		log.Panicln("查询用户关注信息时失败")
 		return resUserIDList, tx.Error
@@ -71,7 +72,7 @@ func FindMultiConcern(id uint) (resUserIDList []uint, err error) {
 }
 
 func FindMultiFollower(id uint) (resUserIDList []uint, err error) {
-	tx := DBConn.Model(&model.Follower{}).Select("follower_id").Where("user_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
+	tx := config.DBConn.Model(&model.Follower{}).Select("follower_id").Where("user_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
 	if tx.Error != nil {
 		log.Panicln("查询用户关注信息时失败")
 		return resUserIDList, tx.Error
@@ -86,7 +87,7 @@ func CheckMultiFollowNoHit(hostID uint, isFollow *[]bool, followNoCache *map[uin
 		follows = append(follows, k)
 	}
 	var followList []model.Follower
-	err = DBConn.Model(&model.Follower{}).Where("follower_id = ? AND  user_id IN ?", hostID, follows).Find(&followList).Error
+	err = config.DBConn.Model(&model.Follower{}).Where("follower_id = ? AND  user_id IN ?", hostID, follows).Find(&followList).Error
 	if err != nil {
 		log.Println("在mysql查询未命中的关注关系时失败")
 		return err
