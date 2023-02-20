@@ -2,13 +2,15 @@ package service
 
 import (
 	"log"
+	"strconv"
 	"tiktok/mapper/db"
 	"tiktok/model"
 	"tiktok/pkg/common"
+	"time"
 )
 
-// SendMessageService 发送消息服务
-func SendMessageService(senderID uint, receiverID uint, messageText string) error {
+// SendMessage 发送消息服务
+func SendMessage(senderID uint, receiverID uint, messageText string) error {
 	message := model.Message{
 		UserID:      senderID,
 		FriendID:    receiverID,
@@ -16,16 +18,26 @@ func SendMessageService(senderID uint, receiverID uint, messageText string) erro
 	}
 	err := db.CreateMessage(message)
 	if err != nil {
-		log.Println("service-SendMessageService: 发送消息失败，", err.Error())
+		log.Println("service-SendMessage: 发送消息失败，", err.Error())
 		return err
 	}
 	return nil
 }
 
-func GetMessageListService(senderID uint, receiverID uint) (messageResponseList []common.MessageResp, err error) {
-	messageList, err := db.GetMessageList(senderID, receiverID)
+func GetMessageList(senderID uint, receiverID uint, strPrevTime string) (messageResponseList []common.MessageResp, err error) {
+	prevTime := time.Unix(0, 0)
+	if strPrevTime != "0" && strPrevTime != "" {
+		i, err := strconv.ParseInt(strPrevTime, 10, 64)
+		if err != nil {
+			log.Println("传入的时间有问题")
+		} else {
+			//转化为本地时间
+			prevTime = time.UnixMilli(i).Local()
+		}
+	}
+	messageList, err := db.GetMessageList(senderID, receiverID, prevTime)
 	if err != nil {
-		log.Println("service-SendMessageService: 获取消息列表失败，", err.Error())
+		log.Println("service-SendMessage: 获取消息列表失败，", err.Error())
 		return []common.MessageResp{}, err
 	}
 
@@ -35,8 +47,8 @@ func GetMessageListService(senderID uint, receiverID uint) (messageResponseList 
 			Content:    m.MessageText,
 			FromUserID: m.UserID,
 			ToUserID:   m.FriendID,
-			//CreateTime: m.CreatedAt.Format("2006-01-02 15:03:04"),
-			CreateTime: m.CreatedAt.Unix(),
+			//CreateTime: m.CreatedAt.Format("2006-01-02 15:04:05.000"),
+			CreateTime: m.CreatedAt.UnixMilli(),
 		}
 		messageResponseList = append(messageResponseList, messageResponse)
 	}

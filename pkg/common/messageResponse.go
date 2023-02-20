@@ -7,6 +7,7 @@ type MessageResp struct {
 	FromUserID uint   `json:"from_user_id"`
 	Content    string `json:"content"`
 	CreateTime int64  `json:"create_time"`
+	//CreateTime string `json:"create_time"`
 }
 
 type MessageListBaseResp struct {

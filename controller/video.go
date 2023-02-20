@@ -103,7 +103,6 @@ func Feed(ctx *gin.Context) {
 	//token := ctx.GetString("token")
 	token := ctx.Query("token")
 	fmt.Println(token)
-	//strLastTime := ctx.GetString("latest_time")
 	strLastTime := ctx.Query("latest_time")
 	videoResp, nextTime, err := videoService.Feed(token, strLastTime)
 	if err != nil || len(videoResp) == 0 || nextTime <= 0 {

@@ -171,11 +171,11 @@ func FriendList(ctx *gin.Context) {
 		log.Panicln("获取好友列表时失败")
 		return
 	}
-	ctx.JSON(http.StatusOK, common.UserInfoListBaseResp{
+	ctx.JSON(http.StatusOK, common.FriendListBaseResp{
 		BaseResponse: common.BaseResponse{
 			StatusCode: 0,
 			StatusMsg:  "请求好友列表成功!",
 		},
-		UserList: userInfoList,
+		FriendInfo: userInfoList,
 	})
 }

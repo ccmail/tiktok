@@ -115,7 +115,8 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 		if err != nil {
 			log.Println("传入字符串格式有误")
 		} else {
-			lastTime = time.Unix(i, 0)
+			//转化为当地时间
+			lastTime = time.Unix(i, 0).Local()
 		}
 	}
 	//查出来之后需要查询用户的点赞信息以及用户和人家的关注信息

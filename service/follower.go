@@ -140,7 +140,7 @@ func FollowerList(token string, guestID uint) (resList []common.UserInfoResp, er
 }
 
 // FriendList	这里要做一下过滤, 只有自己能看自己的好友列表, 当guestID与token不符时应当直接返回
-func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
+func FriendList(token string, guestID uint) (resList []common.FriendInfo, err error) {
 	hostID := util.GetHostIDFromToken(token)
 
 	if hostID != guestID {
@@ -187,10 +187,25 @@ func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err 
 			return resList, err
 		}
 	}
+	resList = make([]common.FriendInfo, 0, len(userInfoList))
 
-	resList = make([]common.UserInfoResp, 0, len(userInfoList))
+	//userResp := make([]common.UserInfoResp, 0, len(userInfoList))
 	for _, userInfo := range userInfoList {
-		resList = append(resList, util.PackUserInfo(userInfo, true))
+		//查找聊天记录, 返回时间最后的
+		send := db.GetSendMessage(hostID, userInfo.ID)
+		receive := db.GetReceiveMessage(hostID, userInfo.ID)
+		var msgType = int64(0)
+		mes := receive.MessageText
+		if send.CreatedAt.After(receive.CreatedAt) {
+			msgType = 1
+			mes = send.MessageText
+		}
+
+		resList = append(resList, common.FriendInfo{
+			Message:      mes,
+			MsgType:      msgType,
+			UserInfoResp: util.PackUserInfo(userInfo, true),
+		})
 	}
 	return resList, nil
 }
