@@ -1,19 +1,22 @@
 package mapper
 
 import (
+	"context"
 	"fmt"
-	"os"
-	"tiktok/model"
-
+	"github.com/redis/go-redis/v9"
 	"gopkg.in/yaml.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"log"
+	"os"
+	"tiktok/model"
 )
 
 var (
-	DBConn   *gorm.DB
-	dbConfig *DBConfig
-	mappers  = []interface{}{&model.Comment{}, &model.Follower{}, &model.Like{}, &model.Message{}, &model.User{}, &model.Video{}}
+	DBConn    *gorm.DB
+	RedisConn *redis.Client
+	dbConfig  *DBConfig
+	mappers   = []interface{}{&model.Comment{}, &model.Follower{}, &model.Like{}, &model.Message{}, &model.User{}, &model.Video{}}
 )
 
 type DBConfig struct {
@@ -24,6 +27,12 @@ type DBConfig struct {
 	Port        string `yaml:"Port"`
 	MaxOpenConn int    `yaml:"MaxOpenConn"`
 	MaxIdleConn int    `yaml:"MaxIdleConn"`
+
+	RedisAddress   string `yaml:"RedisHost"`
+	RedisPort      string `yaml:"RedisPort"`
+	RedisMaxActive int    `yaml:"RedisMaxActive"`
+	RedisIdleTime  int    `yaml:"RedisIdleTime"`
+	RedisPassword  string `yaml:"RedisPassword"`
 }
 
 // 从数据库配置文件中获取DSN
@@ -60,6 +69,20 @@ func InitDBConnector() (err error) {
 	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConn)
 	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConn)
 
+	return nil
+}
+
+func InitRedisConnector() (err error) {
+	RedisConn = redis.NewClient(&redis.Options{
+		Addr:     dbConfig.RedisAddress,
+		Password: dbConfig.RedisPassword,
+		DB:       0,
+	})
+	ping := RedisConn.Ping(context.Background())
+	if ping.Err() != nil {
+		log.Panicln("链接Redis失败...")
+		return err
+	}
 	return nil
 }
 
@@ -109,7 +132,7 @@ func createDateTable(t interface{}) error {
 	return nil
 }
 
-func CreateAllTable() (err error) {
+func createAllTable() (err error) {
 	for _, mapper := range mappers {
 		err = createDateTable(mapper)
 		if err != nil {

@@ -109,7 +109,7 @@ func Feed(ctx *gin.Context) {
 	if err != nil || len(videoResp) == 0 || nextTime <= 0 {
 		ctx.JSON(http.StatusOK, common.BaseResponse{
 			StatusCode: 1,
-			StatusMsg:  "获取Feed流失败",
+			StatusMsg:  fmt.Sprint(err),
 		})
 		return
 	}

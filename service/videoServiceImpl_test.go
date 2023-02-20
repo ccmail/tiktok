@@ -10,7 +10,7 @@ import (
 	"testing"
 	"tiktok/mapper"
 	"tiktok/pkg/middleware"
-	"tiktok/util"
+	"tiktok/pkg/util"
 	"time"
 )
 

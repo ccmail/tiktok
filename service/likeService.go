@@ -6,7 +6,7 @@ import (
 	"tiktok/model"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
-	"tiktok/util"
+	"tiktok/pkg/util"
 )
 
 // LikeService 这里逻辑可能有点问题, actionType形参没有使用

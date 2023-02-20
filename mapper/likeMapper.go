@@ -56,3 +56,25 @@ func GetLikeList(userID uint) (videoList []model.Video, err error) {
 	}
 	return videoList, nil
 }
+
+// CheckLikesNoHit 这里只查没有命中的部分, 之后直接写入到isFavorite中
+func CheckLikesNoHit(hostID uint, isFavorite *[]bool, likeNoCache *map[uint][]int) (err error) {
+	likes := make([]uint, 0, len(*likeNoCache)>>2)
+	for k := range *likeNoCache {
+		likes = append(likes, k)
+	}
+
+	var likeList []model.Like
+	err = DBConn.Table("likes").Where("user_id = ? AND video_id IN ?", hostID, likes).Find(&likeList).Error
+	if err != nil {
+		log.Println("在mysql中查询点赞关系时失败")
+		return err
+	}
+
+	for _, l := range likeList {
+		for _, v := range (*likeNoCache)[l.VideoID] {
+			(*isFavorite)[v] = l.IsLike
+		}
+	}
+	return nil
+}

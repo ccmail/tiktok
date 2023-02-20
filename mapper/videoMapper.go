@@ -10,6 +10,27 @@ import (
 	"gorm.io/gorm"
 )
 
+type Option func(db *gorm.DB)
+
+func GetVideoInfo(opts ...Option) (v []*model.Video, err error) {
+	//优先去查redis
+	for i := range opts {
+		opts[i](DBConn)
+	}
+	if err = DBConn.Error; err != nil {
+		log.Panicln("查询失败")
+		return v, err
+	}
+	DBConn.Find(&v)
+	return v, nil
+}
+
+func VideoIDList(userID uint) Option {
+	return func(db *gorm.DB) {
+		db.Where("author_id=?", userID)
+	}
+}
+
 // IsFavorite 查询某用户是否点赞某视频
 func IsFavorite(uid uint, vid uint) bool {
 	if uid == 0 {
@@ -34,10 +55,16 @@ func CreateVideo(video *model.Video) error {
 		//log.Println("视频信息插入数据库失败", create.Error)
 		return create.Error
 	}
+	//根据作者id添加视频到cache
+	//SetVideoCache(*video, video.AuthorID)
 	return nil
 
 }
 func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
+	//resultVideos = GetVideoCache(userId)
+	//if len(resultVideos) <= 0 {
+	//	log.Println("cache中没有该用户的相关视频")
+	//}
 	find := DBConn.Table("videos").Where("author_id=?", userId).Find(&resultVideos)
 	if find.Error != nil {
 		err = find.Error
@@ -45,7 +72,9 @@ func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
 	return resultVideos, err
 }
 
+// FindVideosByLastTime 这里需要为所有的视频设置一个list, list长度为30
 func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err error) {
+
 	find := DBConn.Table("videos").Where("created_at < ?", lastTime).Order("created_at desc").Limit(config.MaxFeedVideoCount).Find(&resultVideos)
 	if find.Error != nil {
 		err = find.Error

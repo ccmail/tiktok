@@ -4,12 +4,16 @@ import (
 	"tiktok/controller"
 	"tiktok/mapper"
 	"tiktok/pkg/middleware"
-	"tiktok/util"
+	"tiktok/pkg/util"
 )
 
 func main() {
 	// 连接数据库
 	err := mapper.InitDBConnector()
+	if err != nil {
+		panic(err)
+	}
+	err = mapper.InitRedisConnector()
 	if err != nil {
 		panic(err)
 	}

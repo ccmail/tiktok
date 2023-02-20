@@ -9,14 +9,14 @@ import (
 )
 
 // CheckFollowing  判断 FollowerID 是否关注 UserID
-func CheckFollowing(FollowerID uint, UserID uint) bool {
-	if FollowerID == 0 {
+func CheckFollowing(hostID uint, guestID uint) bool {
+	if hostID == 0 {
 		//用户处于未登录的状态, 默认未关注
 		return false
 	}
 	var relationExist = &model.Follower{}
 	//判断关注是否存在
-	err := DBConn.Model(&model.Follower{}).Where("follower_id=? AND user_id=? AND is_follow=?", FollowerID, UserID, true).First(&relationExist).Error
+	err := DBConn.Model(&model.Follower{}).Where("follower_id=? AND user_id=? AND is_follow=?", hostID, guestID, true).First(&relationExist).Error
 
 	// false-关注不存在，true-关注存在
 	return !errors.Is(err, gorm.ErrRecordNotFound)
@@ -38,7 +38,7 @@ func ExistFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist
 }
 
 // CreatFollowRecord
-// host关注guest, 所以host是被关注的人, guest是up
+// host关注guest, 所以host是粉丝, guest是up
 func CreatFollowRecord(hostID, guestID uint, isConcern bool) error {
 	followRecord := model.Follower{IsFollow: isConcern, FollowerID: hostID, UserID: guestID}
 	//正在关注, 执行+1
@@ -77,4 +77,24 @@ func FindMultiFollower(id uint) (resUserIDList []uint, err error) {
 		return resUserIDList, tx.Error
 	}
 	return resUserIDList, nil
+}
+
+// CheckMultiFollowNoHit 判断hostID是否关注followNoCache中的人
+func CheckMultiFollowNoHit(hostID uint, isFollow *[]bool, followNoCache *map[uint][]int) (err error) {
+	follows := make([]uint, 0, len(*followNoCache)>>2)
+	for k := range *followNoCache {
+		follows = append(follows, k)
+	}
+	var followList []model.Follower
+	err = DBConn.Model(&model.Follower{}).Where("follower_id = ? AND  user_id IN ?", hostID, follows).Find(&followList).Error
+	if err != nil {
+		log.Println("在mysql查询未命中的关注关系时失败")
+		return err
+	}
+	for _, f := range followList {
+		for _, v := range (*followNoCache)[f.UserID] {
+			(*isFollow)[v] = f.IsFollow
+		}
+	}
+	return nil
 }

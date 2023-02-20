@@ -1,15 +1,14 @@
 package service
 
 import (
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
 	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
 	"tiktok/pkg/middleware"
-	"tiktok/util"
-
-	"golang.org/x/crypto/bcrypt"
+	"tiktok/pkg/util"
 )
 
 const (

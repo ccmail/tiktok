@@ -5,7 +5,7 @@ import (
 	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/common"
-	"tiktok/util"
+	"tiktok/pkg/util"
 )
 
 // PostCommentService 发布评论

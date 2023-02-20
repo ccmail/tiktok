@@ -6,7 +6,7 @@ import (
 	"tiktok/mapper"
 	"tiktok/pkg/common"
 	"tiktok/pkg/middleware"
-	"tiktok/util"
+	util2 "tiktok/pkg/util"
 )
 
 // Follow
@@ -59,7 +59,7 @@ func Follow(token string, guestID uint, isConcern bool) error {
 
 // FollowList 用户token去请求guestID对应的关注列表
 func FollowList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := util.GetHostIDFromToken(token)
+	hostID := util2.GetHostIDFromToken(token)
 
 	//这里请求出来有两步, 如果tokenID==guestID, 直接返回, 默认全部关注
 	//如果tokenID!=guestID, 还需要判断请求出来的user和token的关注关系
@@ -81,14 +81,14 @@ func FollowList(token string, guestID uint) (resList []common.UserInfoResp, err 
 		if hostID != guestID {
 			isFollowing = mapper.CheckFollowing(hostID, upInfo.ID)
 		}
-		resList = append(resList, util.PackUserInfo(upInfo, isFollowing))
+		resList = append(resList, util2.PackUserInfo(upInfo, isFollowing))
 	}
 	return resList, nil
 }
 
 // FollowerList 请求粉丝列表, 和请求关注列表逻辑一致, 不同的是需要更改一下查询数据库的信息
 func FollowerList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := util.GetHostIDFromToken(token)
+	hostID := util2.GetHostIDFromToken(token)
 
 	userIDList, err := mapper.FindMultiFollower(guestID)
 	if err != nil {
@@ -104,14 +104,14 @@ func FollowerList(token string, guestID uint) (resList []common.UserInfoResp, er
 
 	resList = make([]common.UserInfoResp, 0, len(userInfoList))
 	for _, upInfo := range userInfoList {
-		resList = append(resList, util.PackUserInfo(upInfo, mapper.CheckFollowing(hostID, upInfo.ID)))
+		resList = append(resList, util2.PackUserInfo(upInfo, mapper.CheckFollowing(hostID, upInfo.ID)))
 	}
 	return resList, nil
 }
 
 // FriendList	这里要做一下过滤, 只有自己能看自己的好友列表, 当guestID与token不符时应当直接返回
 func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err error) {
-	hostID := util.GetHostIDFromToken(token)
+	hostID := util2.GetHostIDFromToken(token)
 
 	if hostID != guestID {
 		return resList, errors.New("请求好友列表的id和token不一致, 不允许偷看别人的好友列表")
@@ -145,7 +145,7 @@ func FriendList(token string, guestID uint) (resList []common.UserInfoResp, err 
 	}
 	resList = make([]common.UserInfoResp, 0, len(multiUserInfo))
 	for _, userInfo := range multiUserInfo {
-		resList = append(resList, util.PackUserInfo(userInfo, true))
+		resList = append(resList, util2.PackUserInfo(userInfo, true))
 	}
 	return resList, nil
 }

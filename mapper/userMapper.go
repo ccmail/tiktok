@@ -109,3 +109,24 @@ func UpdateUserFollowCount(hostID, guestID uint, isConcern bool) error {
 	}
 	return nil
 }
+
+func GetMultiUserInfoNoHit(userInfo *[]model.User, userNoCache *map[uint][]int) (err error) {
+	users := make([]uint, 0, len(*userNoCache))
+	for k := range *userNoCache {
+		users = append(users, k)
+	}
+
+	var userList []model.User
+	find := DBConn.Model(&model.User{}).Where("id IN ?", users).Find(&userList)
+	if find.Error != nil {
+		log.Panicln("在mysql查询用户信息失败")
+		return err
+	}
+
+	for _, user := range userList {
+		for _, v := range (*userNoCache)[user.ID] {
+			(*userInfo)[v] = user
+		}
+	}
+	return nil
+}
