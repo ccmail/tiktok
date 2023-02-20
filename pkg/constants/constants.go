@@ -7,7 +7,9 @@ const (
 	Fans       = "fans"
 	Videos     = "video"
 	Feed       = "feed"
-	RedisTrue  = "1"
-	RedisFalse = "0"
 	User       = "user"
+	Comment    = "comment"
+	Friend     = "friend"
+	RedisFalse = "0"
+	RedisTrue  = "1"
 )

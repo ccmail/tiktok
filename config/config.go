@@ -20,3 +20,6 @@ const ZSetScoreUp = 1e30
 const ZSetScoreDown = 1e10
 
 const ZSetMemberTimeout = -24 * time.Hour
+
+const weightComment = 4
+const weightLike = 2

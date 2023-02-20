@@ -1,4 +1,4 @@
-package redis
+package cache
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"tiktok/config"
+	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/constants"
 	"tiktok/pkg/util"
@@ -17,44 +18,44 @@ var RCtx = context.Background()
 
 type RedisOption func(rdb *redis.Client)
 
-func GetVideoCache(key ...any) (v []model.Video) {
-	k := util.SpliceKey(constants.Videos, key)
-	result, err := config.RedisConn.Get(RCtx, k).Result()
+func GetVideo(videoID uint) (v model.Video, ok bool) {
+	k := util.SpliceKey(constants.Videos, videoID)
+	result, err := mapper.RedisConn.Get(RCtx, k).Result()
 	if err == redis.Nil {
 		log.Println("redis中不存在", k)
-		return v
+		return v, false
 	} else if err != nil {
 		log.Println("其他的redis方面出错")
-		return v
+		return v, false
 	}
 	err = json.Unmarshal([]byte(result), &v)
 	if err != nil {
 		log.Println("redis反序列化时出错")
-		return v
+		return v, false
 	}
-	return v
+	return v, true
 }
 
-func SetVideoCache(videos model.Video, key ...any) {
-	k := util.SpliceKey(constants.Videos, key)
-	marshal, err := json.Marshal(videos)
+func SetVideo(videos *model.Video) {
+	k := util.SpliceKey(constants.Videos, (*videos).ID)
+	marshal, err := json.Marshal(*videos)
 	if err != nil {
 		log.Println("序列化存入redis时出错")
 	}
-	err = config.RedisConn.Set(RCtx, k, marshal, config.RedisTimeout).Err()
+	err = mapper.RedisConn.Set(RCtx, k, marshal, config.RedisTimeout).Err()
 	if err != nil {
 		log.Println("存入redis时出错")
 	}
 }
 
-func SetMultiFeedCache(video *[]model.Video) {
+func SetMultiFeed(video *[]model.Video) {
 	for _, v := range *video {
-		AddFeedCache(v)
+		AddFeed(v)
 	}
 }
 
-// AddFeedCache 需要将视频写入feed流中的sortedSet
-func AddFeedCache(video model.Video) {
+// AddFeed 需要将视频写入feed流中的sortedSet
+func AddFeed(video model.Video) {
 
 	marshal, err := json.Marshal(video)
 	if err != nil {
@@ -62,8 +63,8 @@ func AddFeedCache(video model.Video) {
 		return
 	}
 	k := util.SpliceKey(constants.Feed)
-	add := config.RedisConn.ZAdd(RCtx, k, redis.Z{
-		Score:  feedScore(video.CreatedAt, video.ID),
+	add := mapper.RedisConn.ZAdd(RCtx, k, redis.Z{
+		Score:  timeScore(video.CreatedAt, video.ID),
 		Member: marshal,
 	})
 
@@ -72,7 +73,7 @@ func AddFeedCache(video model.Video) {
 	}
 }
 
-func GetFeedCache(latestTime time.Time) (ans []model.Video) {
+func GetFeed(latestTime time.Time) (ans []model.Video) {
 	op := redis.ZRangeBy{
 		Min:    "-1",
 		Max:    strconv.FormatFloat(float64(latestTime.Unix())*(config.ZSetScoreUp), 'E', 10, 64),
@@ -81,13 +82,13 @@ func GetFeedCache(latestTime time.Time) (ans []model.Video) {
 	}
 	//获取latestTime这个时间段内的视频
 	k := util.SpliceKey(constants.Feed)
-	result, err := config.RedisConn.ZRangeByScore(RCtx, k, &op).Result()
+	result, err := mapper.RedisConn.ZRangeByScore(RCtx, k, &op).Result()
 	if err != nil {
 		log.Println("在cache查询feed流出错")
 		return ans
 	}
 	//查询之后, 根据该latestTime删除一些成员, 设置策略为latestTime的前多少小时过期
-	config.RedisConn.ZRemRangeByScore(RCtx, k,
+	mapper.RedisConn.ZRemRangeByScore(RCtx, k,
 		strconv.Itoa(-1),
 		strconv.FormatFloat(
 			float64(
@@ -102,7 +103,7 @@ func GetFeedCache(latestTime time.Time) (ans []model.Video) {
 			break
 		}
 		temp := model.Video{}
-		err = json.Unmarshal([]byte(result[i]), &temp)
+		_ = json.Unmarshal([]byte(result[i]), &temp)
 		ans = append(ans, temp)
 		idx++
 	}
@@ -113,7 +114,7 @@ func GetFeedCache(latestTime time.Time) (ans []model.Video) {
 //time.Unix()
 //使用videoID+time拼接score, 避免重复
 //长度为10, 对应二进制应当为2^34,videoID这里进35位, 与之拼接
-func feedScore(time time.Time, videoID uint) (x float64) {
+func timeScore(time time.Time, videoID uint) (x float64) {
 	p := float64(videoID)
 	x = float64(time.Unix())*config.ZSetScoreUp + (p / config.ZSetScoreDown)
 	return x

@@ -12,14 +12,12 @@ import (
 
 func Follow(ctx *gin.Context) {
 	token := ctx.Query("token")
-	if token == "" {
-		ctx.JSON(http.StatusOK, common.BaseResponse{
-			StatusCode: 1,
-			StatusMsg:  "没有获取到用户token",
-		})
-		log.Panicln("获取用户token失败")
-		return
+	hostIDTemp, _ := ctx.Get("user_id")
+	var hostID uint
+	if v, ok := hostIDTemp.(uint); ok {
+		hostID = v
 	}
+
 	var guestID uint
 	guestIDStr := ctx.Query("to_user_id")
 	if atoi, err := strconv.Atoi(guestIDStr); err != nil || guestIDStr == "" {
@@ -32,6 +30,14 @@ func Follow(ctx *gin.Context) {
 	} else {
 		guestID = uint(atoi)
 	}
+	if hostID == guestID {
+		ctx.JSON(http.StatusOK, common.BaseResponse{
+			StatusCode: 1,
+			StatusMsg:  fmt.Sprint("请不要自己关注自己!"),
+		})
+		return
+	}
+
 	//true表示关注, false表示取关
 	var isConcern bool
 	if op := ctx.Query("action_type"); op == "" {
@@ -44,6 +50,7 @@ func Follow(ctx *gin.Context) {
 	} else {
 		isConcern = op[0] == '1'
 	}
+
 	err := service.Follow(token, guestID, isConcern)
 	if err != nil {
 		ctx.JSON(http.StatusOK, common.BaseResponse{

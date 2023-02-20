@@ -4,8 +4,6 @@ import (
 	"log"
 	"net/http"
 	"tiktok/pkg/common"
-	"tiktok/pkg/middleware"
-
 	"tiktok/service"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +15,7 @@ func UserRegister(c *gin.Context) {
 	username, password := c.Query("username"), c.Query("password")
 
 	//2.service层处理
-	registerResponse, err := service.UserRegisterService(username, password)
+	registerResponse, err := service.UserRegister(username, password)
 
 	//3.返回响应
 	if err != nil {
@@ -45,7 +43,7 @@ func UserLogin(c *gin.Context) {
 	username := c.Query("username")
 	password := c.Query("password")
 
-	userLoginResponse, err := service.UserLoginService(username, password)
+	userLoginResponse, err := service.UserLogin(username, password)
 
 	// 用户不存在返回对应的错误
 	if err != nil {
@@ -74,7 +72,10 @@ func UserLogin(c *gin.Context) {
 func UserInfo(c *gin.Context) {
 	// 根据user_id查询
 	rawId := c.Query("user_id")
-	userInfoResponse, err := service.UserInfoService(rawId)
+	// 根据token获得当前用户的userid
+	token := c.Query("token")
+
+	userInfoResponse, err := service.UserInfo(rawId, token)
 
 	// 用户不存在返回对应的错误
 	if err != nil {
@@ -88,12 +89,6 @@ func UserInfo(c *gin.Context) {
 		})
 		return
 	}
-
-	// 根据token获得当前用户的userid
-	token := c.Query("token")
-	tokenStruct, _ := middleware.ParseToken(token)
-	hostId := tokenStruct.UserId
-	userInfoResponse.IsFollow = service.IsFollow(rawId, hostId)
 
 	// 用户存在，返回相应的id和token
 	log.Println("获取用户id", rawId, "的信息成功。")

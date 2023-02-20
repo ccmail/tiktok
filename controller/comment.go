@@ -1,12 +1,12 @@
 package controller
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
-	"tiktok/mapper/gorm"
 	"tiktok/pkg/common"
-	"tiktok/pkg/middleware"
+	"tiktok/pkg/util"
 	"tiktok/service"
 
 	"github.com/gin-gonic/gin"
@@ -14,30 +14,32 @@ import (
 
 // Comment  评论操作控制层
 func Comment(c *gin.Context) {
-	//1 数据处理
-	UserId, _ := c.Get("user_id")
+	//1 数据处理,这里
+	userIdTemp, _ := c.Get("user_id")
 	var userId uint
-	if v, ok := UserId.(uint); ok {
+	if v, ok := userIdTemp.(uint); ok {
 		userId = v
 	}
+
 	actionType := c.Query("action_type")
 	videoIdStr := c.Query("video_id")
 	videoId, _ := strconv.ParseUint(videoIdStr, 10, 64)
 
-	if actionType == "1" { // 发布评论
+	// 发布评论
+	if actionType == "1" {
 		text := c.Query("comment_text")
-
-		// TODO: 这个调用的3个service，其实可以并发执行，后面可以考虑用协程来实现并发
-		newComment, err1 := service.PostCommentService(userId, text, uint(videoId))
+		newComment, err1 := service.PostComment(userId, text, uint(videoId))
 		commenter, err2 := service.GetCommenter(userId)
 		author, err3 := service.GetAuthor(uint(videoId))
+
 		if err1 != nil || err2 != nil || err3 != nil {
 			c.JSON(http.StatusOK, common.BaseResponse{
 				StatusCode: 403,
 				StatusMsg:  "发表评论失败",
 			})
-			c.Abort()
+			//c.Abort()
 			log.Panicln("controller-Comment: 发表评论失败，")
+			return
 		}
 
 		c.JSON(http.StatusOK, common.CommentActionBaseResp{
@@ -49,80 +51,53 @@ func Comment(c *gin.Context) {
 				ID:         newComment.ID,
 				Content:    newComment.CommentText,
 				CreateDate: newComment.CreatedAt.Format("01-02"),
-				User: common.UserInfoResp{
-					UserID:        commenter.ID,
-					Username:      commenter.Name,
-					FollowCount:   commenter.FollowCount,
-					FollowerCount: commenter.FollowerCount,
-					// TODO: IsFollowing包含了DAO操作，后面要移到mapper里去
-					IsFollow: gorm.CheckFollowing(userId, author),
-				},
+				User:       util.PackUserInfo(commenter, service.CheckFollowing(userId, author)),
 			},
 		})
-
-	} else if actionType == "2" { //删除评论
-		commentIdStr := c.Query("comment_id")
-		commentId, _ := strconv.ParseInt(commentIdStr, 10, 64)
-		err := service.DeleteCommentService(uint(commentId), uint(videoId))
-
-		if err != nil {
-			c.JSON(http.StatusOK, common.BaseResponse{
-				StatusCode: 403,
-				StatusMsg:  "Failed to delete comment",
-			})
-			c.Abort()
-			log.Panicln("controller-Comment: 删除评论失败，")
-			return
-		}
-
-		c.JSON(http.StatusOK, common.BaseResponse{
-			StatusCode: 0,
-			StatusMsg:  "删除评论成功",
-		})
-
-	} else {
-		c.JSON(http.StatusOK, common.BaseResponse{
-			StatusCode: 405,
-			StatusMsg:  "未知的 actionType: " + actionType,
-		})
-		c.Abort()
-		log.Println("controller-CommentAction: 评论操作失败：未知的 actionType：" + actionType)
 		return
 	}
 
-}
-
-func getHostIDFromToken(hostToken string) uint {
-	var hostID uint
-	if hostToken != "" {
-		hostInfo, err := middleware.ParseTokenCJS(hostToken)
-		if err != nil {
-			//就算token解析失败也不应该拒绝访问publishList
-			log.Println("请求评论列表的用户的token解析失败", err)
-		} else {
-			hostID = hostInfo.UserId
-		}
+	if actionType != "2" {
+		c.JSON(http.StatusOK, common.BaseResponse{
+			StatusCode: 405,
+			StatusMsg:  fmt.Sprint("未知的 actionType: ", actionType),
+		})
+		log.Panicf("controller-CommentAction: 评论操作失败：未知的 actionType：%v", actionType)
+		return
 	}
-	//log.Println(hostID)
-	return hostID
+
+	//删除评论
+	commentIdStr := c.Query("comment_id")
+	commentId, _ := strconv.ParseInt(commentIdStr, 10, 64)
+	err := service.DeleteComment(uint(commentId), uint(videoId))
+
+	if err != nil {
+		c.JSON(http.StatusOK, common.BaseResponse{
+			StatusCode: 403,
+			StatusMsg:  "Failed to delete comment",
+		})
+		c.Abort()
+		log.Panicln("controller-Comment: 删除评论失败，")
+		return
+	}
+
+	c.JSON(http.StatusOK, common.BaseResponse{
+		StatusCode: 0,
+		StatusMsg:  "删除评论成功",
+	})
+
 }
 
 // CommentList 获取评论列表控制层
 func CommentList(c *gin.Context) {
-	// getUserID, _ := c.Get("user_id")
-	// var userID uint
-	// if v, ok := getUserID.(uint); ok {
-	// 	userID = v
-	// }
+
 	token := c.Query("token")
-	userID := getHostIDFromToken(token)
+	userID := util.GetHostIDFromToken(token)
 
 	videoIdStr := c.Query("video_id")
 	videoID, _ := strconv.ParseUint(videoIdStr, 10, 64)
 
-	// log.Println("userID: ", userID, ", videoID: ", videoID)
-
-	commentResponseList, err := service.CommentListService(userID, uint(videoID))
+	commentResponseList, err := service.CommentList(userID, uint(videoID))
 
 	// log.Println("commentResponseList: ", commentResponseList)
 

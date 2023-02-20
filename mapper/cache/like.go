@@ -1,18 +1,19 @@
-package redis
+package cache
 
 import (
 	"github.com/redis/go-redis/v9"
 	"log"
 	"tiktok/config"
+	"tiktok/mapper"
 	"tiktok/model"
 	"tiktok/pkg/constants"
 	"tiktok/pkg/util"
 )
 
-// CheckMultiFavoriteCache
+// CheckMultiFavorite
 // ans长度固定
 // 检查cache中存在的点赞关系, 存在点赞关系的直接进行判断, 不存在的话, 添加到failedVID中, 后续直接取mysql查询failedVID中的数据, 并根据map索引写回到ans中
-func CheckMultiFavoriteCache(uid uint, vInfo *[]model.Video) (ans []bool, bad map[uint][]int) {
+func CheckMultiFavorite(uid uint, vInfo *[]model.Video) (ans []bool, bad map[uint][]int) {
 	ans = make([]bool, len(*vInfo))
 	bad = make(map[uint][]int)
 	if uid == 0 {
@@ -24,7 +25,7 @@ func CheckMultiFavoriteCache(uid uint, vInfo *[]model.Video) (ans []bool, bad ma
 		key[i] = util.SpliceKey(constants.Favorite, uid, (*vInfo)[i].ID)
 	}
 
-	result, err := config.RedisConn.MGet(RCtx, key...).Result()
+	result, err := mapper.RedisConn.MGet(RCtx, key...).Result()
 	if err != nil {
 		log.Println("cache中没有查到相关点赞记录")
 		return ans, bad
@@ -44,10 +45,10 @@ func CheckMultiFavoriteCache(uid uint, vInfo *[]model.Video) (ans []bool, bad ma
 	return ans, bad
 }
 
-// CheckFavoriteCache 查询cache中是否存在点赞信息,ans表示点赞情况, ok表示查询情况
-func CheckFavoriteCache(uid uint, vInfo *model.Video) (ans, ok bool) {
+// CheckFavorite 查询cache中是否存在点赞信息,ans表示点赞情况, ok表示查询情况
+func CheckFavorite(uid uint, vInfo *model.Video) (ans, ok bool) {
 	key := util.SpliceKey(constants.Favorite, uid, (*vInfo).ID)
-	result, err := config.RedisConn.Get(RCtx, key).Result()
+	result, err := mapper.RedisConn.Get(RCtx, key).Result()
 	if err != nil {
 		log.Println("cache中没有查到相关点赞记录")
 		return ans, false
@@ -56,22 +57,22 @@ func CheckFavoriteCache(uid uint, vInfo *model.Video) (ans, ok bool) {
 
 }
 
-func SetMultiFavoriteCache(hostID uint, vInfos *[]model.Video, isLikes *[]bool) {
+func SetMultiFavorite(hostID uint, vInfos *[]model.Video, isLikes *[]bool) {
 	if len(*vInfos) != len(*isLikes) {
 		log.Println("传入的video信息和点赞信息的长度不同! 不能插入到缓存中")
 	}
 	for i := 0; i < len(*vInfos); i++ {
-		SetFavoriteCache(hostID, (*vInfos)[i].ID, (*isLikes)[i])
+		SetFavorite(hostID, (*vInfos)[i].ID, (*isLikes)[i])
 	}
 }
 
-func SetFavoriteCache(uid, vid uint, isLike bool) {
+func SetFavorite(uid, vid uint, isLike bool) {
 	k := util.SpliceKey(constants.Favorite, uid, vid)
 	v := constants.RedisTrue
 	if !isLike {
 		v = constants.RedisFalse
 	}
-	err := config.RedisConn.Set(RCtx, k, v, config.RedisTimeout).Err()
+	err := mapper.RedisConn.Set(RCtx, k, v, config.RedisTimeout).Err()
 	if err != nil {
 		log.Println("点赞信息插入缓存失败")
 	}

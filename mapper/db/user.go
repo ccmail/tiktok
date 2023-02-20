@@ -1,20 +1,19 @@
-package gorm
+package db
 
 import (
 	"errors"
 	"fmt"
-	"log"
-	"tiktok/config"
-	"tiktok/model"
-	"tiktok/pkg/errno"
-
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log"
+	"tiktok/mapper"
+	"tiktok/model"
+	"tiktok/pkg/errno"
 )
 
 // FindUserInfo 根据用户id获取用户信息
 func FindUserInfo(userId uint) (user model.User, err error) {
-	err = config.DBConn.Model(&model.User{}).Where("id = ?", userId).Find(&user).Error
+	err = mapper.DBConn.Model(&model.User{}).Where("id = ?", userId).Find(&user).Error
 	if err != nil {
 		log.Printf("没有查到id为%v的用户\n", userId)
 		return user, nil
@@ -31,7 +30,7 @@ func CreateUser(username string, password string) (model.User, error) {
 		Password: encryptedPassword,
 	}
 	// 模型关联到数据库表users //可注释
-	err := config.DBConn.AutoMigrate(&model.User{})
+	err := mapper.DBConn.AutoMigrate(&model.User{})
 	if err != nil {
 		log.Panicln("模型关联表失败")
 		return newUser, err
@@ -44,7 +43,7 @@ func CreateUser(username string, password string) (model.User, error) {
 	}
 
 	// 用户不存在，在DB中新建用户
-	err = config.DBConn.Model(&model.User{}).Create(&newUser).Error
+	err = mapper.DBConn.Model(&model.User{}).Create(&newUser).Error
 	if err != nil {
 		// 错误处理
 		log.Panicln("mapper-CreateUser: 创建用户时出错", err)
@@ -68,28 +67,10 @@ func encrypt(passwordString string) (encryptedPassword string, err error) {
 // ExistUsername  检查用户名是否存在
 func ExistUsername(username string) (model.User, bool) {
 	var user model.User
-	err := config.DBConn.Model(&model.User{}).Where("name=?", username).First(&user).Error
+	err := mapper.DBConn.Model(&model.User{}).Where("name=?", username).First(&user).Error
 
 	// false-用户名不存在，true-用户名存在
 	return user, !errors.Is(err, gorm.ErrRecordNotFound)
-}
-
-// FindMultiUserInfo 返回值为map, 根据userID获取user结构体
-func FindMultiUserInfo(multiUserID []uint) (map[uint]model.User, error) {
-	//根据userID为索引, 存储user信息
-	mp := map[uint]model.User{}
-	//获取查询到的user信息
-	var tempUser []model.User
-	find := config.DBConn.Model(&model.User{}).Where("id IN ?", multiUserID).Find(&tempUser)
-	if find.Error != nil {
-		log.Panicln("查询多个userInfo时发生了错误", find.Error)
-		return mp, find.Error
-	}
-	//将获取到的user信息存到map中
-	for _, userInfo := range tempUser {
-		mp[userInfo.ID] = userInfo
-	}
-	return mp, nil
 }
 
 // UpdateUserFollowCount host关注guest, 所以host是被关注的人, guest是up, 所以关注操作, host.follow+1, guest.follower+1
@@ -98,12 +79,12 @@ func UpdateUserFollowCount(hostID, guestID uint, isConcern bool) error {
 	if !isConcern {
 		x = " - 1"
 	}
-	tx := config.DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("follow_count", gorm.Expr(fmt.Sprint("follow_count", x)))
+	tx := mapper.DBConn.Model(&model.User{}).Where("id = ?", hostID).Update("follow_count", gorm.Expr(fmt.Sprint("follow_count", x)))
 	if tx.Error != nil {
 		log.Panicln("更新关注人数时出错")
 		return tx.Error
 	}
-	tx = config.DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("follower_count", gorm.Expr(fmt.Sprint("follower_count ", x)))
+	tx = mapper.DBConn.Model(&model.User{}).Where("id = ?", guestID).Update("follower_count", gorm.Expr(fmt.Sprint("follower_count ", x)))
 	if tx.Error != nil {
 		log.Panicln("更新粉丝人数时出错")
 		return tx.Error
@@ -118,7 +99,7 @@ func GetMultiUserInfoNoHit(userInfo *[]model.User, userNoCache *map[uint][]int) 
 	}
 
 	var userList []model.User
-	find := config.DBConn.Model(&model.User{}).Where("id IN ?", users).Find(&userList)
+	find := mapper.DBConn.Model(&model.User{}).Where("id IN ?", users).Find(&userList)
 	if find.Error != nil {
 		log.Panicln("在mysql查询用户信息失败")
 		return err

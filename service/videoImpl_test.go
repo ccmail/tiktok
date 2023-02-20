@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 	"tiktok/config"
+	"tiktok/mapper"
 	"tiktok/pkg/middleware"
 	"time"
 )
@@ -39,7 +40,7 @@ func TestVideoService_Publish(t *testing.T) {
 
 }
 func TestVideoService_PublishList(t *testing.T) {
-	_ = config.InitDBConnectorSupportTest()
+	_ = mapper.InitDBConnectorSupportTest()
 	var v VideoService
 	list, err := v.PublishList(1, "")
 	if err != nil {
@@ -52,7 +53,7 @@ func TestVideoService_PublishList(t *testing.T) {
 }
 
 func TestVideoService_Feed(t *testing.T) {
-	_ = config.InitDBConnectorSupportTest()
+	_ = mapper.InitDBConnectorSupportTest()
 	var v VideoService
 	feed, nextTime, err := v.Feed("", "")
 	if err != nil {

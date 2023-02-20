@@ -9,5 +9,5 @@ type Comment struct {
 	UserID      uint
 	VideoID     uint
 	CommentText string
-	Valid       bool `gorm:"default:true"`
+	Valid       bool `db:"default:true"`
 }

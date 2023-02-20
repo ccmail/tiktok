@@ -2,16 +2,18 @@ package main
 
 import (
 	"tiktok/config"
+	"tiktok/controller"
+	"tiktok/mapper"
 	"tiktok/pkg/middleware"
 )
 
 func main() {
 	// 连接数据库
-	err := config.InitDBConnector()
+	err := mapper.InitDBConnector()
 	if err != nil {
 		panic(err)
 	}
-	err = config.InitRedisConnector()
+	err = mapper.InitRedisConnector()
 	if err != nil {
 		panic(err)
 	}
@@ -22,7 +24,7 @@ func main() {
 		panic(err)
 	}
 	//注册路由
-	r := config.InitRouter()
+	r := controller.InitRouter()
 	//启动端口为12345的项目
 	errRun := r.Run(":12345")
 	if errRun != nil {

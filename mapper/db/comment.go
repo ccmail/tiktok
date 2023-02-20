@@ -1,15 +1,14 @@
-package gorm
+package db
 
 import (
-	"log"
-	"tiktok/config"
-	"tiktok/model"
-
 	"gorm.io/gorm"
+	"log"
+	"tiktok/mapper"
+	"tiktok/model"
 )
 
 func CreateComment(comment model.Comment) error {
-	err := config.DBConn.Table("comments").Create(&comment).Error
+	err := mapper.DBConn.Table("comments").Create(&comment).Error
 	if err != nil {
 		log.Println("mapper-CreateComment: 新建评论记录失败")
 		return err
@@ -19,7 +18,7 @@ func CreateComment(comment model.Comment) error {
 
 func NewCommentTx(newComment model.Comment) error {
 
-	err1 := config.DBConn.Transaction(func(db *gorm.DB) error {
+	err1 := mapper.DBConn.Transaction(func(db *gorm.DB) error {
 		if err := CreateComment(newComment); err != nil {
 			return err
 		}
@@ -32,12 +31,11 @@ func NewCommentTx(newComment model.Comment) error {
 	if err1 != nil {
 		log.Println("mapper-NewCommentTx: 发表评论操作失败，", err1)
 	}
-
 	return nil
 }
 
 func DeleteComment(commentId uint) error {
-	err := config.DBConn.Table("comments").Where("id = ?", commentId).Update("valid", false).Error
+	err := mapper.DBConn.Table("comments").Where("id = ?", commentId).Update("valid", false).Error
 	if err != nil {
 		log.Println("mapper-DeleteComment: 删除评论操作失败，", err)
 		return err
@@ -45,8 +43,17 @@ func DeleteComment(commentId uint) error {
 	return nil
 }
 
+func GetComment(cid uint) (ans model.Comment, err error) {
+	err = mapper.DBConn.Model(&model.Comment{}).Where("id = ?", cid).Find(&ans).Error
+	if err != nil {
+		log.Panicf("没有查到id为%v的评论\n, 错误信息为:%v", cid, err)
+		return
+	}
+	return ans, nil
+}
 func DelCommentTx(commentID uint, videoID uint) error {
-	err1 := config.DBConn.Transaction(func(db *gorm.DB) error {
+
+	err1 := mapper.DBConn.Transaction(func(db *gorm.DB) error {
 		if err := DeleteComment(commentID); err != nil {
 			return err
 		}
@@ -63,7 +70,7 @@ func DelCommentTx(commentID uint, videoID uint) error {
 
 // GetCommentList 获取一个视频的评论列表
 func GetCommentList(videoID uint) (commentList []model.Comment, err error) {
-	err = config.DBConn.Table("comments").Where("video_id=? AND valid=?", videoID, true).Order("created_at desc").Find(&commentList).Error
+	err = mapper.DBConn.Table("comments").Where("video_id=? AND valid=?", videoID, true).Order("created_at desc").Find(&commentList).Error
 	if err != nil {
 		log.Println("mapper-GetCommentList: 查表获取评论列表失败，", err)
 		return []model.Comment{{}}, err

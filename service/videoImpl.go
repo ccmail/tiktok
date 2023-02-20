@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"tiktok/config"
-	gorm2 "tiktok/mapper/gorm"
-	"tiktok/mapper/redis"
+	"tiktok/mapper/cache"
+	gorm2 "tiktok/mapper/db"
 	"tiktok/model"
 	"tiktok/pkg/common"
 	"tiktok/pkg/middleware"
@@ -119,7 +119,7 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 		}
 	}
 	//查出来之后需要查询用户的点赞信息以及用户和人家的关注信息
-	videoInfos := redis.GetFeedCache(lastTime)
+	videoInfos := cache.GetFeed(lastTime)
 
 	//缓存中的feed数量不够, 查mysql
 	if len(videoInfos) < config.MaxFeedVideoCount {
@@ -128,24 +128,24 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 			log.Panicln("根据时间向Mysql请求视频时失败", err)
 			return vResp, nTime, err
 		}
-		//	这里还需要将videos写入cache, 直接全部写入, 以达到将存在值的cache存活时间更新
-		redis.SetMultiFeedCache(&videoInfos)
 	}
+	//	这里还需要将videos写入cache, 直接全部写入, 以达到将存在值的cache存活时间更新
+	cache.SetMultiFeed(&videoInfos)
 	if len(videoInfos) == 0 {
 		return vResp, lastTime.Unix(), errors.New("没有更多视频, 等会试试吧")
 	}
 
 	//查缓存, 点赞信息的缓存
-	isFavorite, likeNoCache := redis.CheckMultiFavoriteCache(hostID, &videoInfos)
+	isFavorite, likeNoCache := cache.CheckMultiFavorite(hostID, &videoInfos)
 	if len(likeNoCache) > 0 {
 		//	有几个没查到缓存, 需要查数据库
 		err := gorm2.CheckLikesNoHit(hostID, &isFavorite, &likeNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在对应的点赞关系, 不用管了, 直接当作不存在点赞信息")
 		}
-		//每次查都需要更新信息在cache中的存活时间, 查到之后要写到cache中
-		redis.SetMultiFavoriteCache(hostID, &videoInfos, &isFavorite)
 	}
+	//每次查都需要更新信息在cache中的存活时间, 查到之后要写到cache中
+	cache.SetMultiFavorite(hostID, &videoInfos, &isFavorite)
 
 	//设置up的id数组
 	guestIDs := make([]uint, len(videoInfos))
@@ -154,26 +154,26 @@ func (t *VideoService) Feed(token string, strLastTime string) (vResp []common.Vi
 	}
 
 	//关注信息查缓存
-	isFollow, followNoCache := redis.CheckMultiFollowingCache(hostID, &guestIDs)
+	isFollow, followNoCache := cache.CheckMultiFollowing(hostID, &guestIDs)
 	if len(followNoCache) > 0 {
 		err := gorm2.CheckMultiFollowNoHit(hostID, &isFollow, &followNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在对应的关注关系, 不用管了, 直接当作不存在关注信息")
 		}
-		//	之后将查到的关注信息写入到redis中
-		redis.SetMultiFollowingCache(hostID, &guestIDs, &isFollow)
 	}
+	//	之后将查到的关注信息写入到redis中
+	cache.SetMultiFollowing(hostID, &guestIDs, &isFollow)
 
 	//作者信息查缓存
-	userInfo, userNoCache := redis.GetMultiUserCache(guestIDs)
+	userInfo, userNoCache := cache.GetMultiUser(&guestIDs)
 	if len(userNoCache) > 0 {
 		err := gorm2.GetMultiUserInfoNoHit(&userInfo, &userNoCache)
 		if err != nil {
 			log.Println("数据库中也不存在这个user 可能出错了")
 		}
-		//	之后将查到的信息写入到redis中
-		redis.SetMultiUserCache(&userInfo)
 	}
+	//	之后将查到的信息写入到redis中
+	cache.SetMultiUser(&userInfo)
 
 	//按倒叙传入的视频, 最后的时间最前
 	nextTime = videoInfos[len(videoInfos)-1].CreatedAt

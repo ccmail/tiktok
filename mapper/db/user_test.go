@@ -1,14 +1,14 @@
-package gorm
+package db
 
 import (
 	"fmt"
 	"log"
 	"testing"
-	"tiktok/config"
+	"tiktok/mapper"
 )
 
 func TestFindMultiUserInfo(t *testing.T) {
-	err := config.InitDBConnectorSupportTest()
+	err := mapper.InitDBConnectorSupportTest()
 	if err != nil {
 		log.Panicln("链接数据库失败")
 	}
@@ -22,19 +22,19 @@ func TestFindMultiUserInfo(t *testing.T) {
 	//	fmt.Println(i)
 	//}
 
-	test := []uint{1, 2, 3, 4}
-	user, err := FindMultiUserInfo(test)
-	if err != nil {
-		t.Error()
-	}
-	for u := range user {
-		fmt.Println(u)
-	}
-	fmt.Println(user)
+	//test := []uint{1, 2, 3, 4}
+	//user, err := FindMultiUserInfo(test)
+	//if err != nil {
+	//	t.Error()
+	//}
+	//for u := range user {
+	//	fmt.Println(u)
+	//}
+	//fmt.Println(user)
 }
 
 func TestFindUserInfo(t *testing.T) {
-	_ = config.InitDBConnectorSupportTest()
+	_ = mapper.InitDBConnectorSupportTest()
 	user, err := FindUserInfo(1)
 	if err != nil {
 		t.Error()

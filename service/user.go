@@ -4,7 +4,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"strconv"
-	"tiktok/mapper/gorm"
+	"tiktok/mapper/cache"
+	"tiktok/mapper/db"
 	"tiktok/pkg/common"
 	"tiktok/pkg/errno"
 	"tiktok/pkg/middleware"
@@ -17,8 +18,8 @@ const (
 	//MinPasswordLength = 8  //密码最小长度
 )
 
-// UserRegisterService 用户注册服务
-func UserRegisterService(username string, password string) (common.UserIdTokenResp, error) {
+// UserRegister 用户注册服务
+func UserRegister(username string, password string) (common.UserIdTokenResp, error) {
 
 	//0.数据准备
 	var userResponse = common.UserIdTokenResp{}
@@ -30,7 +31,7 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 	}
 
 	//2.新建用户
-	newUser, err := gorm.CreateUser(username, password)
+	newUser, err := db.CreateUser(username, password)
 	if err != nil {
 		return userResponse, err
 	}
@@ -38,7 +39,7 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 	//3.颁发token
 	token, err := middleware.CreateToken(newUser.ID, newUser.Name)
 	if err != nil {
-		log.Panicln("service-UserRegisterService: 创建用户token出错,", err)
+		log.Panicln("service-UserRegister: 创建用户token出错,", err)
 		return userResponse, err
 	}
 
@@ -49,29 +50,43 @@ func UserRegisterService(username string, password string) (common.UserIdTokenRe
 	return userResponse, nil
 }
 
-// UserInfoService 用户信息获取服务
-func UserInfoService(rawId string) (common.UserInfoResp, error) {
+// UserInfo 用户信息获取服务
+func UserInfo(rawId string, token string) (common.UserInfoResp, error) {
 	// 数据准备
 	var userInfoQueryResponse = common.UserInfoResp{}
-	userId, err := strconv.ParseUint(rawId, 10, 64)
+	guestIDTemp, err := strconv.ParseUint(rawId, 10, 64)
 	if err != nil {
-		log.Panicln("service-UserInfoService: 解析rawID时发生错误， ", err)
+		log.Panicln("service-UserInfo: 解析rawID时发生错误， ", err)
 		return userInfoQueryResponse, err
 	}
-
-	// 获取用户信息
-	user, err := gorm.FindUserInfo(uint(userId))
+	guestID := uint(guestIDTemp)
+	tokenStruct, ok := middleware.ParseToken(token)
 	if err != nil {
-		return userInfoQueryResponse, err
+		log.Panicln("解析token时发生错误")
+	}
+	hostID := tokenStruct.UserId
+
+	// 获取用户信息, 先去查cache, cache查不到再查mysql
+	user, ok := cache.GetUser(guestID)
+	if !ok {
+		user, err = db.FindUserInfo(guestID)
+		if err != nil {
+			return userInfoQueryResponse, err
+		}
+		cache.SetUser(&user)
 	}
 
-	userInfoQueryResponse = util.PackUserInfo(user, false)
-
+	//开始查询follow信息
+	isFollowing, ok := cache.CheckFollowing(hostID, guestID)
+	if !ok {
+		isFollowing = db.CheckFollowing(hostID, guestID)
+	}
+	userInfoQueryResponse = util.PackUserInfo(user, isFollowing)
 	return userInfoQueryResponse, nil
 }
 
-// UserLoginService 用户登录服务
-func UserLoginService(username string, password string) (common.UserIdTokenResp, error) {
+// UserLogin 用户登录服务
+func UserLogin(username string, password string) (common.UserIdTokenResp, error) {
 
 	// 数据准备
 	var userResponse = common.UserIdTokenResp{}
@@ -83,16 +98,17 @@ func UserLoginService(username string, password string) (common.UserIdTokenResp,
 		return userResponse, err
 	}
 
+	// 避免缓存失效等操作, 用户登录等安全性较高信息不使用缓存
 	// 检查用户是否存在
-	user, flagExist := gorm.ExistUsername(username)
+	user, flagExist := db.ExistUsername(username)
 	if !flagExist {
-		log.Println("Service-UserLoginService: 登录失败: 用户 ", username, " 不存在.")
+		log.Println("Service-UserLogin: 登录失败: 用户 ", username, " 不存在.")
 		return userResponse, errno.ErrorFullPossibility
 	}
 
 	// 检查密码是否正确
 	if !checkPassword(user.Password, password) {
-		log.Println("service-UserLoginService: 登录失败：密码错误")
+		log.Println("service-UserLogin: 登录失败：密码错误")
 		return userResponse, errno.ErrorWrongPassword
 	}
 
@@ -104,31 +120,17 @@ func UserLoginService(username string, password string) (common.UserIdTokenResp,
 	// 颁发token
 	token, err := middleware.CreateToken(user.Model.ID, user.Name)
 	if err != nil {
-		log.Println("service-UserLoginService: 登录失败，创建用户token发生错误")
+		log.Println("service-UserLogin: 登录失败，创建用户token发生错误")
 		return userResponse, err
 	}
-
+	//将用户信息写入cache
+	cache.SetUser(&user)
 	userResponse = common.UserIdTokenResp{
 		UserId: user.Model.ID,
 		Token:  token,
 	}
 
 	return userResponse, nil
-}
-
-// IsFollow 检验已登录用户是否关注目标用户,
-func IsFollow(targetId string, userid uint) bool {
-	// 修改targetId数据类型
-	hostId, err := strconv.ParseUint(targetId, 10, 64)
-	if err != nil {
-		return false
-	}
-	// 如果是自己查自己，那就是没有关注
-	if uint(hostId) == userid {
-		return false
-	}
-	// 自己是否关注目标userId
-	return gorm.CheckFollowing(uint(hostId), userid)
 }
 
 // checkPassword 核对密码
