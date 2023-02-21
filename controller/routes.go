@@ -49,8 +49,10 @@ func InitRouter() *gin.Engine {
 		followGroup := g.Group("/relation")
 		{
 			followGroup.POST("/action/", middleware.JwtMiddleware(), Follow)
-			followGroup.GET("/follow/list/", middleware.JwtMiddleware(), FollowList)
-			followGroup.GET("/follower/list/", middleware.JwtMiddleware(), FollowerList)
+			//followGroup.GET("/follow/list/", middleware.JwtMiddleware(), FollowList)
+			followGroup.GET("/follow/list/", FollowList)
+			followGroup.GET("/follower/list/", FollowerList)
+			//followGroup.GET("/follower/list/", middleware.JwtMiddleware(), FollowerList)
 			followGroup.GET("/friend/list/", middleware.JwtMiddleware(), FriendList)
 		}
 
