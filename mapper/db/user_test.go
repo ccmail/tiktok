@@ -35,7 +35,7 @@ func TestFindMultiUserInfo(t *testing.T) {
 
 func TestFindUserInfo(t *testing.T) {
 	_ = mapper.InitDBConnectorSupportTest()
-	user, err := GetUserInfo(1)
+	user, err := FindUserInfo(1)
 	if err != nil {
 		t.Error()
 	}

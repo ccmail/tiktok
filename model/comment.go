@@ -7,7 +7,7 @@ import (
 type Comment struct {
 	gorm.Model
 	UserID      uint
-	VideoID     uint `gorm:"index:vid"`
+	VideoID     uint
 	CommentText string
 	Valid       bool `db:"default:true"`
 }

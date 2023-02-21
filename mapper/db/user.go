@@ -11,8 +11,8 @@ import (
 	"tiktok/pkg/errno"
 )
 
-// GetUserInfo 根据用户id获取用户信息
-func GetUserInfo(userId uint) (user model.User, err error) {
+// FindUserInfo 根据用户id获取用户信息
+func FindUserInfo(userId uint) (user model.User, err error) {
 	err = mapper.DBConn.Model(&model.User{}).Where("id = ?", userId).Find(&user).Error
 	if err != nil {
 		log.Printf("没有查到id为%v的用户\n", userId)
@@ -36,7 +36,7 @@ func CreateUser(username string, password string) (model.User, error) {
 		return newUser, err
 	}
 	// 新建user
-	if _, flagExist := CheckUsername(username); flagExist {
+	if _, flagExist := ExistUsername(username); flagExist {
 		//用户名已存在
 		log.Println("mapper-CreateUser: 无法创建用户：用户名已存在")
 		return newUser, errno.ErrorRedundantUsername
@@ -64,8 +64,8 @@ func encrypt(passwordString string) (encryptedPassword string, err error) {
 	return
 }
 
-// CheckUsername  检查用户名是否存在
-func CheckUsername(username string) (model.User, bool) {
+// ExistUsername  检查用户名是否存在
+func ExistUsername(username string) (model.User, bool) {
 	var user model.User
 	err := mapper.DBConn.Model(&model.User{}).Where("name=?", username).First(&user).Error
 

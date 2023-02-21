@@ -2,22 +2,20 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"gopkg.in/yaml.v2"
 	"io"
 	"log"
 	"os"
-	"sync"
-
-	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"gopkg.in/yaml.v2"
 )
 
 var (
-	once              sync.Once
-	ossServerInstance *OssServer
-	ossConfig         *OssConfig
-	Bucket            *oss.Bucket
-	EndPoint          string
-	BucketName        string
+	//once              sync.Once
+	//ossServerInstance *OssServer
+	ossConfig  *OssConfig
+	Bucket     *oss.Bucket
+	EndPoint   string
+	BucketName string
 )
 
 type OssConfig struct {
@@ -28,14 +26,6 @@ type OssConfig struct {
 }
 
 type OssServer struct {
-}
-
-// NewOssServer  为日后上传文件服务预留接口
-func NewOssServer() *OssServer {
-	once.Do(func() {
-		ossServerInstance = &OssServer{}
-	})
-	return ossServerInstance
 }
 
 // InitOSS 初始化OSS服务

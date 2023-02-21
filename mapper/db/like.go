@@ -8,8 +8,8 @@ import (
 	"tiktok/model"
 )
 
-// CheckLikeRecord true-存在记录，false-不存在记录
-func CheckLikeRecord(userId uint, videoId uint) (likeRecord bool, flagExist bool) {
+// ExistLikeRecord true-存在记录，false-不存在记录
+func ExistLikeRecord(userId uint, videoId uint) (likeRecord bool, flagExist bool) {
 	var temp model.Like
 	err := mapper.DBConn.Table("likes").Where("user_id = ? AND video_id = ?", userId, videoId).First(&temp).Error
 	return temp.IsLike, !errors.Is(err, gorm.ErrRecordNotFound)

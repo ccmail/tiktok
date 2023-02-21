@@ -32,8 +32,8 @@ func VideoIDList(userID uint) Option {
 	}
 }
 
-// CheckIsFavorite 查询某用户是否点赞某视频
-func CheckIsFavorite(uid uint, vid uint) bool {
+// IsFavorite 查询某用户是否点赞某视频
+func IsFavorite(uid uint, vid uint) bool {
 	if uid == 0 {
 		//uid为0代表用户未登录, 默认返回false, 代表未关注
 		return false
@@ -61,7 +61,7 @@ func CreateVideo(video *model.Video) error {
 	return nil
 
 }
-func GetVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
+func FindVideosByUserID(userId uint) (resultVideos []model.Video, err error) {
 	//resultVideos = GetVideoCache(userId)
 	//if len(resultVideos) <= 0 {
 	//	log.Println("cache中没有该用户的相关视频")
@@ -83,9 +83,9 @@ func FindVideosByLastTime(lastTime time.Time) (resultVideos []model.Video, err e
 	return resultVideos, err
 }
 
-// CheckVideo 检查videos表中是否存在vid对应的视频
-func CheckVideo(vid uint) (video model.Video, flagExist bool) {
-	err := mapper.DBConn.Table("videos").Where("id = ?", vid).First(&video).Error
+// ExistVideo 检查videos表中是否存在vid对应的视频
+func ExistVideo(vid uint) (video model.Video, flagExist bool) {
+	err := mapper.DBConn.Table("videos").Where("ID = ?", vid).First(&video).Error
 	return video, !errors.Is(err, gorm.ErrRecordNotFound)
 }
 

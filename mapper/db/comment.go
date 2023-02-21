@@ -34,10 +34,10 @@ func NewCommentTx(newComment model.Comment) error {
 	return nil
 }
 
-func DelComment(commentId uint) error {
+func DeleteComment(commentId uint) error {
 	err := mapper.DBConn.Table("comments").Where("id = ?", commentId).Update("valid", false).Error
 	if err != nil {
-		log.Println("mapper-DelComment: 删除评论操作失败，", err)
+		log.Println("mapper-DeleteComment: 删除评论操作失败，", err)
 		return err
 	}
 	return nil
@@ -54,7 +54,7 @@ func GetComment(cid uint) (ans model.Comment, err error) {
 func DelCommentTx(commentID uint, videoID uint) error {
 
 	err1 := mapper.DBConn.Transaction(func(db *gorm.DB) error {
-		if err := DelComment(commentID); err != nil {
+		if err := DeleteComment(commentID); err != nil {
 			return err
 		}
 		if err := ReduceCommentCount(videoID); err != nil {

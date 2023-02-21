@@ -24,5 +24,4 @@ const ZSetMemberTimeout = -24 * time.Hour
 const MQLikeAdd = "like_add"
 const MQLikeUpdate = "like_update"
 
-// MQMaxLen 消息队列最大消息数量, 超过该值会删除, 0表示不设置
-const MQMaxLen int64 = 10000
+const RMQAddress = "amqp://tiktok:tiktok@127.0.0.1:5672/tiktok"

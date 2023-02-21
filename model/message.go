@@ -5,7 +5,7 @@ import "gorm.io/gorm"
 type Message struct {
 	//消息的ID
 	gorm.Model
-	UserID      uint `gorm:"index:user_friend_union_idx"`
-	FriendID    uint `gorm:"index:user_friend_union_idx"`
+	UserID      uint
+	FriendID    uint
 	MessageText string
 }

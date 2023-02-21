@@ -1,10 +1,7 @@
 package service
 
 import (
-	"context"
-	"encoding/json"
 	"log"
-	"tiktok/config"
 	"tiktok/mapper/cache"
 	"tiktok/mapper/db"
 	"tiktok/model"
@@ -20,7 +17,7 @@ func Like(userID uint, videoID uint, actionType uint) error {
 	// 首先要保证视频存在
 	setVideo, videoExist := cache.GetVideo(videoID)
 	if !videoExist {
-		setVideo, videoExist = db.CheckVideo(videoID)
+		setVideo, videoExist = db.ExistVideo(videoID)
 		if !videoExist {
 			log.Println("service-Like: 点赞失败，未找到对应视频")
 			return errno.ErrorNullVideo
@@ -32,46 +29,30 @@ func Like(userID uint, videoID uint, actionType uint) error {
 	//先去cache中查询点赞记录
 	likeRecord, likeExist := cache.CheckFavorite(userID, &setVideo)
 	if !likeExist {
-		likeRecord, likeExist = db.CheckLikeRecord(userID, videoID)
+		likeRecord, likeExist = db.ExistLikeRecord(userID, videoID)
 		if !likeExist { // 不存在记录
 			//使用goroutine启动点赞操作
-			marshal, err := json.Marshal(mq.LikeStruct{UserID: userID, VideoID: videoID, IsLike: isLike})
-			if err != nil {
-				log.Println("序列化失败")
-			}
-			go func() {
-				err := mq.Q.SendMsg(context.Background(), &mq.Msg{
-					ID:       "1",
-					Topic:    config.MQLikeAdd,
-					Body:     marshal,
-					Group:    "g1",
-					Consumer: "c1",
-				})
-				if err != nil {
-					log.Panicln("发送消息失败!")
-				}
-			}()
+			mq.RmqLikeAdd.Publish(mq.LikeStruct{
+				VideoID: videoID,
+				UserID:  userID,
+				IsLike:  isLike,
+			})
+			//go mq.PubAddLike(userID, videoID, isLike)
+			/*			err := db.CreateLikeRecord(userID, videoID, isLike)
+						if err != nil {
+							log.Println("service-Like: 创建like记录失败，", err)
+							return err
+						}*/
 		}
 	}
 	//点赞状态不同时更改
 	if likeExist && likeRecord != isLike {
 		//go mq.PubUpdateLike(userID, videoID, isLike)
-		marshal, err := json.Marshal(mq.LikeStruct{UserID: userID, VideoID: videoID, IsLike: isLike})
-		if err != nil {
-			log.Println("序列化失败")
-		}
-		go func() {
-			err := mq.Q.SendMsg(context.Background(), &mq.Msg{
-				ID:       "1",
-				Topic:    config.MQLikeUpdate,
-				Body:     marshal,
-				Group:    "g1",
-				Consumer: "c1",
-			})
-			if err != nil {
-				log.Panicln("发送消息失败!")
-			}
-		}()
+		mq.RmqLikeUpdate.Publish(mq.LikeStruct{
+			VideoID: videoID,
+			UserID:  userID,
+			IsLike:  isLike,
+		})
 		//go db.UpdateLikeRecord(userID, videoID, isLike)
 	}
 
@@ -101,7 +82,7 @@ func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
 	for _, m := range videoList {
 		var author = common.UserInfoResp{}
 		var getAuthor = model.User{}
-		getAuthor, err := db.GetUserInfo(m.AuthorID)
+		getAuthor, err := db.FindUserInfo(m.AuthorID)
 		if err != nil {
 			log.Println("未找到作者: ", m.AuthorID)
 			continue
@@ -114,7 +95,7 @@ func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
 		author.FollowerCount = getAuthor.FollowerCount
 		author.IsFollow = db.CheckFollowing(userIdHost, m.AuthorID)
 
-		video := util.PackVideoInfo(m, author, db.CheckIsFavorite(userIdHost, m.ID))
+		video := util.PackVideoInfo(m, author, db.IsFavorite(userIdHost, m.ID))
 		/*		video := common.VideoResp{
 				ID:            m.ID,
 				Author:        author,
@@ -122,7 +103,7 @@ func FillInfo(videoList []model.Video, userIdHost uint) []common.VideoResp {
 				CoverUrl:      m.CoverUrl,
 				FavoriteCount: m.FavoriteCount,
 				CommentCount:  m.CommentCount,
-				CheckIsFavorite:    mapper.CheckIsFavorite(userIdHost, m.ID),
+				IsFavorite:    mapper.IsFavorite(userIdHost, m.ID),
 				Title:         m.Title,
 			}*/
 		returnList = append(returnList, video)

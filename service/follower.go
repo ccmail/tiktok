@@ -18,7 +18,7 @@ func Follow(token string, guestID uint, isConcern bool) error {
 	if err != nil {
 		return err
 	}
-	record, exist := db.CheckFollowRecord(parseToken.UserId, guestID)
+	record, exist := db.ExistFollowRecord(parseToken.UserId, guestID)
 	//如果不存在的话, 向follow插入信息, 并更新user表的字段
 	if !exist {
 		err := db.TranCreateFollow(parseToken.UserId, guestID, isConcern)
@@ -55,7 +55,7 @@ func FollowList(token string, guestID uint) (resList []common.UserInfoResp, err 
 	//如果tokenID!=guestID, 还需要判断请求出来的user和token的关注关系
 	guestIDList := cache.GetFollowIDList(guestID)
 	if len(guestIDList) == 0 {
-		guestIDList, err = db.GetMultiConcern(guestID)
+		guestIDList, err = db.FindMultiConcern(guestID)
 		if err != nil {
 			log.Panicln("从数据库中查找关注列表信息时失败")
 			return resList, err
@@ -149,7 +149,7 @@ func FriendList(token string, guestID uint) (resList []common.FriendInfo, err er
 
 	ups := cache.GetFollowIDList(guestID)
 	if len(ups) == 0 {
-		ups, err = db.GetMultiConcern(guestID)
+		ups, err = db.FindMultiConcern(guestID)
 		if err != nil {
 			log.Panicln("从数据库中查找关注列表信息时失败")
 			return resList, err
