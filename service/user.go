@@ -69,7 +69,7 @@ func UserInfo(rawId string, token string) (common.UserInfoResp, error) {
 	// 获取用户信息, 先去查cache, cache查不到再查mysql
 	user, ok := cache.GetUser(guestID)
 	if !ok {
-		user, err = db.FindUserInfo(guestID)
+		user, err = db.GetUserInfo(guestID)
 		if err != nil {
 			return userInfoQueryResponse, err
 		}
@@ -100,7 +100,7 @@ func UserLogin(username string, password string) (common.UserIdTokenResp, error)
 
 	// 避免缓存失效等操作, 用户登录等安全性较高信息不使用缓存
 	// 检查用户是否存在
-	user, flagExist := db.ExistUsername(username)
+	user, flagExist := db.CheckUsername(username)
 	if !flagExist {
 		log.Println("Service-UserLogin: 登录失败: 用户 ", username, " 不存在.")
 		return userResponse, errno.ErrorFullPossibility

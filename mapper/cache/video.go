@@ -50,12 +50,12 @@ func SetVideo(videos *model.Video) {
 
 func SetMultiFeed(video *[]model.Video) {
 	for _, v := range *video {
-		AddFeed(v)
+		SetFeed(v)
 	}
 }
 
-// AddFeed 需要将视频写入feed流中的sortedSet
-func AddFeed(video model.Video) {
+// SetFeed 需要将视频写入feed流中的sortedSet
+func SetFeed(video model.Video) {
 
 	marshal, err := json.Marshal(video)
 	if err != nil {

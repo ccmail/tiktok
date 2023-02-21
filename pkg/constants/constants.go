@@ -9,7 +9,6 @@ const (
 	Feed       = "feed"
 	User       = "user"
 	Comment    = "comment"
-	Friend     = "friend"
 	RedisFalse = "0"
 	RedisTrue  = "1"
 )

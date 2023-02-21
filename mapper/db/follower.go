@@ -63,9 +63,9 @@ func TranUpdateFollow(hostID, guestID uint, isConcern bool) (err error) {
 	return nil
 }
 
-// ExistFollowRecord
+// CheckFollowRecord
 // 是host去关注guest, 这里host是粉丝, guestID是up
-func ExistFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist bool) {
+func CheckFollowRecord(hostID, guestID uint) (followRecord model.Follower, exist bool) {
 	find := mapper.DBConn.Model(&model.Follower{}).Where("user_id = ? AND follower_id = ?", guestID, hostID).Limit(1).Find(&followRecord)
 	if find.Error != nil {
 		log.Panicln("查找失败")
@@ -101,8 +101,8 @@ func UpdateFollowRecord(hostID, guestID uint, isConcern bool) error {
 	return nil
 }
 
-// FindMultiConcern 返回关注id关注的人, 实现逻辑是将id作为粉丝id进行查询
-func FindMultiConcern(id uint) (resUserIDList []uint, err error) {
+// GetMultiConcern 返回关注id关注的人, 实现逻辑是将id作为粉丝id进行查询
+func GetMultiConcern(id uint) (resUserIDList []uint, err error) {
 	tx := mapper.DBConn.Model(&model.Follower{}).Select("user_id").Where("follower_id = ? AND is_follow = ?", id, true).Find(&resUserIDList)
 	if tx.Error != nil {
 		log.Panicln("查询用户关注信息时失败")

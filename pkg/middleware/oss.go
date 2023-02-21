@@ -30,6 +30,7 @@ type OssConfig struct {
 type OssServer struct {
 }
 
+// NewOssServer  为日后上传文件服务预留接口
 func NewOssServer() *OssServer {
 	once.Do(func() {
 		ossServerInstance = &OssServer{}

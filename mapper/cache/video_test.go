@@ -8,7 +8,7 @@ import (
 )
 
 func TestSetInfoForRedis(t *testing.T) {
-	mapper.InitDBConnectorSupportTest()
-	mapper.InitRedisConnector()
+	_ = mapper.InitDBConnectorSupportTest()
+	_ = mapper.InitRedisConnector()
 	fmt.Println(time.Now().Unix())
 }

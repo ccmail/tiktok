@@ -24,41 +24,29 @@ func Like(c *gin.Context) {
 	videoIdStr := c.Query("video_id")
 	videoId, _ := strconv.ParseUint(videoIdStr, 10, 64)
 
-	// 函数调用及响应
-	if actionType == 1 {
-		err := service.LikeService(userId, uint(videoId), uint(actionType))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, common.BaseResponse{
-				StatusCode: 1,
-				StatusMsg:  err.Error(),
-			})
-			log.Panicln("controller-Like: 点赞失败，", err)
-			return
-		}
-		log.Println("点赞成功")
+	if actionType != 1 && actionType != 2 {
 		c.JSON(http.StatusOK, common.BaseResponse{
-			StatusCode: 0,
-			StatusMsg:  "点赞成功！",
+			StatusCode: 1,
+			StatusMsg:  "传入的操作类型出错！",
 		})
-	} else if actionType == 2 {
-		err := service.CancelLikeService(userId, uint(videoId))
-		if err != nil {
-			c.JSON(http.StatusBadRequest, common.BaseResponse{
-				StatusCode: 1,
-				StatusMsg:  err.Error(),
-			})
-			log.Panicln("controller-Like: 取消点赞失败，", err)
-			return
-		}
-		log.Println("取消点赞成功")
-		c.JSON(http.StatusOK, common.BaseResponse{
-			StatusCode: 0,
-			StatusMsg:  "取消点赞成功！",
-		})
-	} else {
-		log.Printf("controller-Like: 操作失败：未定义的actionType%v。", actionType)
+		log.Panicf("controller-Like: 操作失败：未定义的actionType%v。\n", actionType)
 		return
 	}
+
+	err := service.Like(userId, uint(videoId), uint(actionType))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, common.BaseResponse{
+			StatusCode: 1,
+			StatusMsg:  err.Error(),
+		})
+		log.Panicln("controller-Like: 点赞/取消点赞失败，", err)
+		return
+	}
+	log.Println("点赞/取消点赞成功")
+	c.JSON(http.StatusOK, common.BaseResponse{
+		StatusCode: 0,
+		StatusMsg:  "点赞/取消点赞成功！",
+	})
 
 }
 
@@ -77,7 +65,7 @@ func LikeList(c *gin.Context) {
 	}
 
 	//函数调用及响应
-	videoList, err := service.LikeListService(userIdNew)
+	videoList, err := service.LikeList(userIdNew)
 	// log.Println("videoList:", videoList)
 	returnList := service.FillInfo(videoList, userIdNew)
 	// log.Println("returnList:", returnList)

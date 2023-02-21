@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetVideoInfo(t *testing.T) {
-	mapper.InitDBConnectorSupportTest()
+	_ = mapper.InitDBConnectorSupportTest()
 	w, err := GetVideoInfo(VideoIDList(1))
 	if err != nil {
 		t.Error()

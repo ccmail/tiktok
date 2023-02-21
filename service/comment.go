@@ -30,7 +30,7 @@ func PostComment(userId uint, text string, videoId uint) (model.Comment, error) 
 func GetCommenter(userId uint) (commenter model.User, err error) {
 	commenter, ok := cache.GetUser(userId)
 	if !ok {
-		commenter, err = db.FindUserInfo(userId)
+		commenter, err = db.GetUserInfo(userId)
 		if err != nil {
 			log.Panicln("service-GetCommenter: 获取评论者信息失败，", err)
 			return model.User{}, err
@@ -96,7 +96,7 @@ func CommentList(userId uint, videoID uint) (commentResponseList []common.Commen
 	for i := 0; i < len(commentList); i++ {
 		getUser, ok := cache.GetUser(commentList[i].UserID)
 		if !ok {
-			getUser, err = db.FindUserInfo(commentList[i].UserID)
+			getUser, err = db.GetUserInfo(commentList[i].UserID)
 			if err != nil {
 				log.Println("无法找到评论者 ", getUser.ID, "，已略过此条评论 ", commentList[i].ID)
 				continue

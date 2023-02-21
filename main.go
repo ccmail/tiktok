@@ -5,6 +5,7 @@ import (
 	"tiktok/controller"
 	"tiktok/mapper"
 	"tiktok/pkg/middleware"
+	"tiktok/pkg/mq"
 )
 
 func main() {
@@ -23,6 +24,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	//启动消息队列
+	mq.InitRedisMQ()
+	//if err != nil {
+	//	panic(err)
+	//}
 	//注册路由
 	r := controller.InitRouter()
 	//启动端口为12345的项目

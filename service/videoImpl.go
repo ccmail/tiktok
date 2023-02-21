@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"gorm.io/gorm"
 	"log"
 	"mime/multipart"
 	"path/filepath"
@@ -62,7 +61,6 @@ func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) 
 		return "", err
 	}
 	video := model.Video{
-		Model:    gorm.Model{},
 		AuthorID: parseToken.UserId,
 		PlayUrl:  playerUrl,
 		CoverUrl: coverURL,
@@ -82,7 +80,7 @@ func (t *VideoService) Publish(file *multipart.FileHeader, title, token string) 
 // 目前按照点开其他用户的发布列表也是使用这个方法
 // 等Feed完成之后需要测试
 func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList []common.VideoResp, err error) {
-	guestInfo, err := gorm2.FindUserInfo(guestID)
+	guestInfo, err := gorm2.GetUserInfo(guestID)
 	if err != nil {
 		log.Panicln("查找用户信息失败, 没有找到该用户的相关信息", err)
 		return resultList, err
@@ -92,7 +90,7 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 
 	author := util2.PackUserInfo(guestInfo, gorm2.CheckFollowing(hostID, guestInfo.ID))
 
-	videoList, err := gorm2.FindVideosByUserID(guestInfo.ID)
+	videoList, err := gorm2.GetVideosByUserID(guestInfo.ID)
 	if err != nil {
 		log.Panicln("获取视频列表失败", err)
 		return resultList, err
@@ -100,7 +98,7 @@ func (t *VideoService) PublishList(guestID uint, hostToken string) (resultList [
 
 	//需要展示的列表信息
 	for i := 0; i < len(videoList); i++ {
-		resultList = append(resultList, util2.PackVideoInfo(videoList[i], author, gorm2.IsFavorite(hostID, videoList[i].ID)))
+		resultList = append(resultList, util2.PackVideoInfo(videoList[i], author, gorm2.CheckIsFavorite(hostID, videoList[i].ID)))
 	}
 	return resultList, nil
 }

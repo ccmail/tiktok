@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetMessageList(t *testing.T) {
-	mapper.InitDBConnectorSupportTest()
+	_ = mapper.InitDBConnectorSupportTest()
 	parse, err := time.ParseInLocation("2006-01-02 15:04:05", "2023-02-15 14:13:11.041", time.Local)
 	if err != nil {
 		log.Println("时间解析失败")

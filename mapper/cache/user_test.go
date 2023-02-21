@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetMultiUserInfoCache(t *testing.T) {
-	mapper.InitDBConnectorSupportTest()
-	mapper.InitRedisConnector()
+	_ = mapper.InitDBConnectorSupportTest()
+	_ = mapper.InitRedisConnector()
 	GetMultiUser(&[]uint{1, 2})
 }
